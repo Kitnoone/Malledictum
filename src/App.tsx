@@ -42,14 +42,6 @@ type OwnedSpecialization = {
   value: number;
 };
 
-type RollResult = {
-  roll: number;
-  target: number;
-  successes: number;
-  successful: boolean;
-  outcome: string;
-};
-
 type AppState = {
   identity: {
     name: string;
@@ -197,36 +189,6 @@ const kindLabels: Record<CatalogKind | "all", string> = {
   augmetic: "Аугметика",
 };
 
-const difficulties = [
-  { label: "Очень легкая", modifier: 60 },
-  { label: "Лёгкая", modifier: 40 },
-  { label: "Рутинная", modifier: 20 },
-  { label: "Средняя", modifier: 0 },
-  { label: "Трудная", modifier: -10 },
-  { label: "Сложная", modifier: -20 },
-  { label: "Очень сложная", modifier: -30 },
-] as const;
-
-function rollD100() {
-  if (typeof window !== "undefined" && window.crypto?.getRandomValues) {
-    const values = new Uint32Array(1);
-    const fairLimit = Math.floor(0x100000000 / 100) * 100;
-    do window.crypto.getRandomValues(values); while (values[0] >= fairLimit);
-    return (values[0] % 100) + 1;
-  }
-  return Math.floor(Math.random() * 100) + 1;
-}
-
-function outcomeFor(successes: number, successful: boolean) {
-  if (successes >= 5) return "Поразительный успех";
-  if (successes >= 3) return "Впечатляющий успех";
-  if (successes >= 1) return "Успех";
-  if (successes === 0) return successful ? "Частичный успех" : "Частичный провал";
-  if (successes >= -2) return "Провал";
-  if (successes >= -4) return "Впечатляющий провал";
-  return "Поразительный провал";
-}
-
 function Seal({ children }: { children: React.ReactNode }) {
   return <span className="wax-seal" aria-hidden="true"><span>{children}</span></span>;
 }
@@ -252,7 +214,7 @@ function CatalogStats({ item }: { item: CatalogItem }) {
   );
 }
 
-function SkillCheckDialog({
+function SkillReferenceDialog({
   skill,
   rules,
   baseValue,
@@ -268,16 +230,12 @@ function SkillCheckDialog({
   onClose: () => void;
 }) {
   const [selectedSpecializationId, setSelectedSpecializationId] = useState<string | null>(null);
-  const [difficultyModifier, setDifficultyModifier] = useState(0);
-  const [rollResult, setRollResult] = useState<RollResult | null>(null);
 
   const selectedSpecialization = ownedSpecializations.find((entry) => entry.id === selectedSpecializationId) ?? null;
   const selectedSpecializationDefinition = selectedSpecialization
     ? skill.specializations.find((entry) => entry.id === selectedSpecialization.id)
     : null;
   const selectedRules = selectedSpecialization ? rules.specializations[selectedSpecialization.id] : null;
-  const selectedValue = selectedSpecialization?.value ?? baseValue;
-  const target = selectedValue + difficultyModifier;
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -291,34 +249,12 @@ function SkillCheckDialog({
     };
   }, [onClose]);
 
-  const chooseCheck = (specializationId: string | null) => {
-    setSelectedSpecializationId(specializationId);
-    setRollResult(null);
-  };
-
-  const makeRoll = () => {
-    const roll = rollD100();
-    const automaticSuccess = roll <= 5;
-    const automaticFailure = roll >= 96;
-    const successful = automaticSuccess || (!automaticFailure && roll <= target);
-    const calculatedSuccesses = Math.floor(target / 10) - Math.floor(roll / 10);
-    const successes = automaticSuccess || automaticFailure ? 0 : calculatedSuccesses;
-    setRollResult({ roll, target, successes, successful, outcome: outcomeFor(successes, successful) });
-  };
-
-  const rollLabel = rollResult?.roll === 100 ? "00" : String(rollResult?.roll ?? "").padStart(2, "0");
-  const successesLabel = rollResult
-    ? rollResult.successes === 0
-      ? rollResult.successful ? "+0" : "−0"
-      : rollResult.successes > 0 ? `+${rollResult.successes}` : String(rollResult.successes).replace("-", "−")
-    : "";
-
   return (
     <div className="skill-dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="skill-dialog" role="dialog" aria-modal="true" aria-labelledby="skill-dialog-title">
         <header className="skill-dialog-header">
           <div>
-            <small>Проверка умения · {characteristicShort}</small>
+            <small>Справка по умению · {characteristicShort}</small>
             <h2 id="skill-dialog-title">{skill.name}</h2>
           </div>
           <SourceBadge page={rules.page} />
@@ -341,15 +277,15 @@ function SkillCheckDialog({
             <div className="skill-dialog-section-heading">
               <div>
                 <small>{ownedSpecializations.length > 0 ? "Доступны изученные специализации" : "Изученных специализаций нет"}</small>
-                <h3 id="skill-choice-title">Что бросаем?</h3>
+                <h3 id="skill-choice-title">Выберите подходящий случай</h3>
               </div>
             </div>
             <div className="skill-choice-list">
-              <button type="button" className={selectedSpecializationId === null ? "skill-choice active" : "skill-choice"} aria-pressed={selectedSpecializationId === null} onClick={() => chooseCheck(null)}>
+              <button type="button" className={selectedSpecializationId === null ? "skill-choice active" : "skill-choice"} aria-pressed={selectedSpecializationId === null} onClick={() => setSelectedSpecializationId(null)}>
                 <span><small>Базовое умение</small><strong>{skill.name}</strong></span><b>{baseValue}</b>
               </button>
               {ownedSpecializations.map((entry) => (
-                <button type="button" key={entry.id} className={selectedSpecializationId === entry.id ? "skill-choice active" : "skill-choice"} aria-pressed={selectedSpecializationId === entry.id} onClick={() => chooseCheck(entry.id)}>
+                <button type="button" key={entry.id} className={selectedSpecializationId === entry.id ? "skill-choice active" : "skill-choice"} aria-pressed={selectedSpecializationId === entry.id} onClick={() => setSelectedSpecializationId(entry.id)}>
                   <span><small>Специализация · {entry.rank}/4</small><strong>{entry.name}</strong></span><b>{entry.value}</b>
                 </button>
               ))}
@@ -368,36 +304,6 @@ function SkillCheckDialog({
               )}
             </section>
           )}
-
-          <section className="difficulty-section" aria-labelledby="difficulty-title">
-            <div className="skill-dialog-section-heading">
-              <div><small>Таблица сложности · стр. 188</small><h3 id="difficulty-title">Сложность проверки</h3></div>
-              <b>{difficultyModifier > 0 ? `+${difficultyModifier}` : difficultyModifier}</b>
-            </div>
-            <div className="difficulty-list">
-              {difficulties.map((difficulty) => (
-                <button type="button" key={difficulty.label} className={difficulty.modifier === difficultyModifier ? "active" : ""} aria-pressed={difficulty.modifier === difficultyModifier} onClick={() => { setDifficultyModifier(difficulty.modifier); setRollResult(null); }}>
-                  <span>{difficulty.label}</span><b>{difficulty.modifier > 0 ? `+${difficulty.modifier}` : difficulty.modifier}</b>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="roll-console" aria-live="polite">
-            <div className="roll-target">
-              <small>{selectedSpecialization ? `${skill.name} (${selectedSpecialization.name})` : skill.name}</small>
-              <span><b>{selectedValue}</b><i>{difficultyModifier >= 0 ? "+" : "−"}</i><b>{Math.abs(difficultyModifier)}</b><i>=</i><strong>{target}</strong></span>
-            </div>
-            {rollResult && (
-              <div className={rollResult.successful ? "roll-result success" : "roll-result failure"}>
-                <span><small>к100</small><strong>{rollLabel}</strong></span>
-                <span><small>КУ</small><strong>{successesLabel}</strong></span>
-                <div><small>Итог</small><strong>{rollResult.outcome}</strong><em>Проверка против {rollResult.target}</em></div>
-              </div>
-            )}
-            <button className="primary-roll-button" type="button" onClick={makeRoll}>Бросить к100</button>
-            <p className="roll-source-note">Проверки и количество успехов: стр. 185–188. Встречные проверки: стр. 190.</p>
-          </section>
         </div>
       </section>
     </div>
@@ -692,7 +598,7 @@ export default function Home() {
                         const rank = state.skillRanks[skill.id] ?? 0;
                         const specializations = skill.specializations.filter((entry) => (state.specializationRanks[`${skill.id}:${entry.id}`] ?? 0) > 0);
                         const characteristic = CHARACTERISTICS.find((entry) => entry.id === skill.characteristic)!;
-                        return <button type="button" className="registry-row skill-roll-row" key={skill.id} aria-haspopup="dialog" onClick={() => setSelectedSkillId(skill.id)}><div><strong>{skill.name}{skill.special ? " · особое" : ""}</strong>{specializations.length > 0 ? <small>{specializations.map((entry) => { const specializationRank = state.specializationRanks[`${skill.id}:${entry.id}`] ?? 0; return `${entry.name}: ${characteristicValues[skill.characteristic] + (rank * 5) + (specializationRank * 5)}`; }).join(" · ")}</small> : <small>Нажмите, чтобы открыть описание и проверку</small>}</div><span>{characteristic.short}</span><span>{rank} / 4</span><b>{characteristicValues[skill.characteristic] + (rank * 5)}</b></button>;
+                        return <button type="button" className="registry-row skill-reference-row" key={skill.id} aria-haspopup="dialog" onClick={() => setSelectedSkillId(skill.id)}><div><strong>{skill.name}{skill.special ? " · особое" : ""}</strong>{specializations.length > 0 ? <small>{specializations.map((entry) => { const specializationRank = state.specializationRanks[`${skill.id}:${entry.id}`] ?? 0; return `${entry.name}: ${characteristicValues[skill.characteristic] + (rank * 5) + (specializationRank * 5)}`; }).join(" · ")}</small> : <small>Нажмите, чтобы открыть описание</small>}</div><span>{characteristic.short}</span><span>{rank} / 4</span><b>{characteristicValues[skill.characteristic] + (rank * 5)}</b></button>;
                       })}
                     </article>
                   </section>
@@ -778,7 +684,7 @@ export default function Home() {
         </div>
       </section>
       {selectedSkill && selectedSkillRules && selectedSkillCharacteristic && (
-        <SkillCheckDialog
+        <SkillReferenceDialog
           key={selectedSkill.id}
           skill={selectedSkill}
           rules={selectedSkillRules}

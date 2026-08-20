@@ -88,7 +88,7 @@ button { color: inherit; touch-action: manipulation; }
   inset: 0;
   background-image:
     linear-gradient(90deg, rgba(8,8,8,.16), transparent 34%, rgba(8,8,8,.18)),
-    url("../ornate-rail.png");
+    url("./assets/ornate-rail.png");
   background-size: 100% auto, 100% auto;
   background-position: center, center top;
   background-repeat: repeat-y;
@@ -1234,7 +1234,7 @@ textarea { resize: vertical; }
     opacity: .72;
     background:
       linear-gradient(90deg, rgba(0,0,0,.25), transparent 35% 65%, rgba(0,0,0,.25)),
-      url("../ornate-rail.png") center 46% / cover;
+      url("./assets/ornate-rail.png") center 46% / cover;
   }
 
   .mobile-brand-mark {
@@ -1734,7 +1734,7 @@ textarea { resize: vertical; }
   *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
 
-/* Readable rules text and interactive skill checks */
+/* Readable rules text and interactive skill reference */
 
 body.dialog-open { overflow: hidden; }
 
@@ -1745,15 +1745,14 @@ body.dialog-open { overflow: hidden; }
 .condition-card > small,
 .reference-action-card p,
 .rules-inset p,
-.book-rule-block p,
-.roll-source-note { font-family: var(--font-ui); }
+.book-rule-block p { font-family: var(--font-ui); }
 
 .registry-row strong { font-size: 11px; letter-spacing: .1px; }
 .registry-row small { font-size: 10px; line-height: 1.35; }
 .directory-row > div > strong { font-size: 11px; }
 .directory-row > div > small { font-size: 10px; line-height: 1.45; }
 
-.skill-roll-row {
+.skill-reference-row {
   width: 100%;
   appearance: none;
   cursor: pointer;
@@ -1765,9 +1764,9 @@ body.dialog-open { overflow: hidden; }
   transition: background-color .16s ease, box-shadow .16s ease;
 }
 
-.skill-roll-row:hover { background: rgba(101, 25, 28, .08); }
-.skill-roll-row:focus-visible { outline: 3px solid var(--brass); outline-offset: -3px; }
-.skill-roll-row > b {
+.skill-reference-row:hover { background: rgba(101, 25, 28, .08); }
+.skill-reference-row:focus-visible { outline: 3px solid var(--brass); outline-offset: -3px; }
+.skill-reference-row > b {
   min-width: 38px;
   padding: 6px 3px;
   border: 1px solid rgba(101, 25, 28, .28);
@@ -1897,8 +1896,7 @@ body.dialog-open { overflow: hidden; }
 }
 .specialization-rule-block { margin-top: 14px; }
 
-.skill-choice-section,
-.difficulty-section { margin-top: 17px; }
+.skill-choice-section { margin-top: 17px; }
 .skill-dialog-section-heading {
   display: flex;
   align-items: end;
@@ -1978,9 +1976,7 @@ body.dialog-open { overflow: hidden; }
 .skill-choice.active span small { color: #c5b68f; }
 .skill-choice.active span strong,
 .skill-choice.active > b { color: #f0dfad; }
-.skill-choice:focus-visible,
-.difficulty-list button:focus-visible,
-.primary-roll-button:focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
+.skill-choice:focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
 
 .opposed-check {
   display: grid;
@@ -1999,131 +1995,6 @@ body.dialog-open { overflow: hidden; }
   text-transform: uppercase;
 }
 .opposed-check strong { font-size: 14px; line-height: 1.3; }
-
-.difficulty-list {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-}
-.difficulty-list button {
-  min-height: 52px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 8px;
-  cursor: pointer;
-  color: var(--ink-soft);
-  border: 1px solid rgba(73,52,29,.38);
-  background: rgba(255,255,255,.18);
-  font-size: 11px;
-  text-align: left;
-}
-.difficulty-list button b { color: var(--blood); font-size: 13px; }
-.difficulty-list button.active {
-  color: #eee3c8;
-  border-color: #9e8245;
-  background: #4a1114;
-}
-.difficulty-list button.active b { color: #e7cc86; }
-
-.roll-console {
-  display: grid;
-  gap: 12px;
-  margin-top: 18px;
-  padding: 14px;
-  color: #eee3c8;
-  border: 1px solid #8e7442;
-  background:
-    linear-gradient(90deg, rgba(101,25,28,.24), transparent 44%),
-    linear-gradient(145deg, #292824, #11110f);
-  box-shadow: inset 0 0 22px rgba(0,0,0,.4);
-}
-.roll-target {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-.roll-target > small {
-  color: #c3b38e;
-  font-size: 13px;
-  font-weight: 700;
-}
-.roll-target > span {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.roll-target b { color: #c8b786; font-size: 15px; }
-.roll-target i { color: #756d5a; font-style: normal; }
-.roll-target strong {
-  min-width: 56px;
-  padding: 5px 8px;
-  color: #f2dfa8;
-  border: 1px solid rgba(208,184,117,.38);
-  font-family: "Cinzel", serif;
-  font-size: 23px;
-  text-align: center;
-}
-
-.roll-result {
-  display: grid;
-  grid-template-columns: 84px 84px minmax(0, 1fr);
-  gap: 7px;
-  padding: 7px;
-  border: 1px solid rgba(208,184,117,.26);
-  background: rgba(0,0,0,.2);
-}
-.roll-result > span,
-.roll-result > div {
-  min-height: 76px;
-  display: grid;
-  align-content: center;
-  padding: 7px;
-  border: 1px solid rgba(208,184,117,.16);
-  background: rgba(0,0,0,.12);
-  text-align: center;
-}
-.roll-result small {
-  color: #a89a76;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .5px;
-  text-transform: uppercase;
-}
-.roll-result > span strong {
-  margin-top: 3px;
-  color: #f0dfa9;
-  font-family: "Cinzel", serif;
-  font-size: 29px;
-  line-height: 1;
-}
-.roll-result > div strong { margin-top: 3px; font-size: 16px; }
-.roll-result > div em { margin-top: 3px; color: #a89a76; font-size: 11px; font-style: normal; }
-.roll-result.success > div strong { color: #b9dc84; }
-.roll-result.failure > div strong { color: #e98778; }
-
-.primary-roll-button {
-  min-height: 52px;
-  cursor: pointer;
-  color: #f3e5c2;
-  border: 1px solid #c1a35d;
-  background: linear-gradient(#7a2024, #3b0d10);
-  font-family: "Cinzel", serif;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: .55px;
-  text-transform: uppercase;
-  box-shadow: inset 0 0 14px rgba(0,0,0,.36);
-}
-.roll-source-note {
-  margin: 0;
-  color: #a99c7d;
-  font-size: 11px;
-  line-height: 1.35;
-  text-align: center;
-}
 
 @media (max-width: 900px) {
   .mobile-command-title small { font-size: 9px; }
@@ -2187,28 +2058,13 @@ body.dialog-open { overflow: hidden; }
   .skill-choice { min-height: 70px; padding: 11px 12px; }
   .skill-choice span small { font-size: 11px; }
   .skill-choice span strong { font-size: 15px; }
-  .difficulty-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .difficulty-list button { min-height: 54px; font-size: 12px; }
   .opposed-check small { font-size: 10px; }
   .opposed-check strong { font-size: 15px; }
-  .roll-target { align-items: stretch; flex-direction: column; gap: 8px; }
-  .roll-target > small { font-size: 13px; }
-  .roll-target > span { justify-content: flex-end; }
-  .roll-result { grid-template-columns: 70px 70px minmax(0, 1fr); }
-  .roll-result > span,
-  .roll-result > div { min-height: 78px; padding: 5px; }
-  .roll-result > span strong { font-size: 26px; }
-  .roll-result > div strong { font-size: 14px; line-height: 1.2; }
-  .roll-result > div em { font-size: 10px; }
-  .primary-roll-button { min-height: 56px; font-size: 14px; }
-  .roll-source-note { font-size: 11px; }
 }
 
 @media (max-width: 380px) {
   .skill-dialog-header { grid-template-columns: minmax(0, 1fr) 44px; }
   .skill-dialog-header .source-badge { display: none; }
-  .difficulty-list { grid-template-columns: 1fr; }
-  .roll-result { grid-template-columns: 64px 64px minmax(0, 1fr); }
 }
 
 .condition-card .source-badge {

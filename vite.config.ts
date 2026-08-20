@@ -8,5 +8,10 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    rollupOptions: {
+      // The repository-root index.html is the ready GitHub Pages build.
+      // Source builds use this separate entry and still emit dist/index.html.
+      input: { index: "index.source.html" },
+    },
   },
 });
