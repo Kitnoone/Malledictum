@@ -7,7 +7,6 @@ import {
   ORIGINS,
   ROLES,
   RULEBOOK,
-  RULE_DATA_COUNTS,
   SERVICES,
   SKILL_ADVANCE_COSTS,
   SKILLS,
@@ -20,8 +19,11 @@ import {
   type Talent,
 } from "./data/rules";
 import { SKILL_RULE_TEXT, type SkillRuleText } from "./data/skillRules";
+import { TALENT_RULE_TEXT } from "./data/talentRules";
 
 type TabId = "sheet" | "advance" | "inventory" | "reference";
+type SheetPageId = "dossier" | "combat";
+type AdvanceSectionId = "characteristics" | "skills" | "specializations" | "talents" | "journal";
 type PurchaseKind = "talent" | "skill" | "specialization" | "characteristic";
 
 type Purchase = {
@@ -40,6 +42,38 @@ type OwnedSpecialization = {
   name: string;
   rank: number;
   value: number;
+};
+
+type InfluenceEntry = { service: string; level: string; contacts: string };
+type CriticalWoundEntry = { location: string; effect: string };
+type WeaponEntry = {
+  name: string;
+  specialization: string;
+  test: string;
+  damage: string;
+  range: string;
+  magazine: string;
+  weight: string;
+  traits: string;
+};
+type ArmorEntry = { name: string; locations: string; armor: string; weight: string; traits: string };
+type PsychicPowerEntry = {
+  name: string;
+  warpRating: string;
+  test: string;
+  range: string;
+  target: string;
+  duration: string;
+  effect: string;
+};
+
+type RuleDetail = {
+  title: string;
+  eyebrow: string;
+  page: number;
+  description?: string;
+  facts?: Array<{ label: string; value: string }>;
+  traits?: string;
 };
 
 type AppState = {
@@ -68,16 +102,24 @@ type AppState = {
   fateTotal: number;
   woundsCurrent: number;
   corruption: number;
+  mutations: string;
   criticalWounds: string;
   influence: string;
   contacts: string;
+  psychicPowers: string;
+  criticalWoundEntries: CriticalWoundEntry[];
+  influenceEntries: InfluenceEntry[];
   goals: string;
   connections: string;
   prophecy: string;
   notes: string;
   solars: number;
   otherCurrencies: string;
-  psychicPowers: string;
+  weaponEntries: WeaponEntry[];
+  armorEntries: ArmorEntry[];
+  equipmentNotes: string;
+  combatNotes: string;
+  psychicPowerEntries: PsychicPowerEntry[];
   warpCharge: number;
   activeConditions: string[];
 };
@@ -91,9 +133,24 @@ const tabs: { id: TabId; label: string; mobileLabel: string; index: string }[] =
   { id: "reference", label: "Ширма", mobileLabel: "Ширма", index: "IV" },
 ];
 
+const advanceSections: { id: AdvanceSectionId; label: string }[] = [
+  { id: "characteristics", label: "Характеристики" },
+  { id: "skills", label: "Умения" },
+  { id: "specializations", label: "Специализации" },
+  { id: "talents", label: "Таланты" },
+  { id: "journal", label: "Журнал" },
+];
+
 const defaultCharacteristics = Object.fromEntries(
   CHARACTERISTICS.map((characteristic) => [characteristic.id, { starting: 30, advances: 0 }]),
 ) as CharacteristicState;
+
+const emptyInfluenceEntry = (): InfluenceEntry => ({ service: "", level: "", contacts: "" });
+const emptyCriticalWoundEntry = (): CriticalWoundEntry => ({ location: "", effect: "" });
+const emptyWeaponEntry = (): WeaponEntry => ({ name: "", specialization: "", test: "", damage: "", range: "", magazine: "", weight: "", traits: "" });
+const emptyArmorEntry = (): ArmorEntry => ({ name: "", locations: "", armor: "", weight: "", traits: "" });
+const emptyPsychicPowerEntry = (): PsychicPowerEntry => ({ name: "", warpRating: "", test: "", range: "", target: "", duration: "", effect: "" });
+const rows = <T,>(count: number, factory: () => T) => Array.from({ length: count }, factory);
 
 const defaultState: AppState = {
   identity: {
@@ -121,16 +178,24 @@ const defaultState: AppState = {
   fateTotal: 3,
   woundsCurrent: 0,
   corruption: 0,
+  mutations: "",
   criticalWounds: "",
   influence: "",
   contacts: "",
+  psychicPowers: "",
+  criticalWoundEntries: rows(5, emptyCriticalWoundEntry),
+  influenceEntries: rows(8, emptyInfluenceEntry),
   goals: "",
   connections: "",
   prophecy: "",
   notes: "",
   solars: 0,
   otherCurrencies: "",
-  psychicPowers: "",
+  weaponEntries: rows(5, emptyWeaponEntry),
+  armorEntries: rows(5, emptyArmorEntry),
+  equipmentNotes: "",
+  combatNotes: "",
+  psychicPowerEntries: rows(10, emptyPsychicPowerEntry),
   warpCharge: 0,
   activeConditions: [],
 };
@@ -205,11 +270,62 @@ function TextAreaField({ label, value, onChange, placeholder = "" }: { label: st
   return <label className="form-field textarea-field"><span>{label}</span><textarea value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} /></label>;
 }
 
-function CatalogStats({ item }: { item: CatalogItem }) {
+function MobileSheetSection({
+  number,
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  number: string;
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="catalog-stats">
-      {Object.entries(item.stats).map(([key, value]) => <span key={key}><small>{key}</small><b>{value}</b></span>)}
-      <span><small>Вес</small><b>{item.weight}</b></span><span><small>Цена</small><b>{item.price}</b></span>
+    <details className="mobile-sheet-section" open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
+      <summary><span>{number}</span><strong>{title}</strong><i aria-hidden="true">⌄</i></summary>
+      <div className="mobile-sheet-section-body">{children}</div>
+    </details>
+  );
+}
+
+function normalizeRows<T extends Record<string, string>>(value: unknown, count: number, factory: () => T): T[] {
+  const source = Array.isArray(value) ? value : [];
+  return Array.from({ length: count }, (_, index) => ({ ...factory(), ...(source[index] ?? {}) }));
+}
+
+function RuleDetailDialog({ detail, onClose }: { detail: RuleDetail; onClose: () => void }) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.body.classList.add("dialog-open");
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.classList.remove("dialog-open");
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [onClose]);
+
+  return (
+    <div className="skill-dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="skill-dialog rule-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="rule-detail-title">
+        <header className="skill-dialog-header">
+          <div><small>{detail.eyebrow}</small><h2 id="rule-detail-title">{detail.title}</h2></div>
+          <SourceBadge page={detail.page} />
+          <button className="skill-dialog-close" type="button" onClick={onClose} autoFocus aria-label="Закрыть окно">×</button>
+        </header>
+        <div className="skill-dialog-scroll">
+          {detail.facts && detail.facts.length > 0 && (
+            <dl className="detail-facts">
+              {detail.facts.map((fact) => <div key={`${fact.label}-${fact.value}`}><dt>{fact.label}</dt><dd>{fact.value || "—"}</dd></div>)}
+            </dl>
+          )}
+          {detail.description && <section className="book-rule-block"><span>Текст книги</span><p>{detail.description}</p></section>}
+          {detail.traits && <section className="book-rule-block compact-rule-block"><span>Свойства</span><p>{detail.traits}</p></section>}
+        </div>
+      </section>
     </div>
   );
 }
@@ -312,6 +428,8 @@ function SkillReferenceDialog({
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>("sheet");
+  const [sheetPage, setSheetPage] = useState<SheetPageId>("dossier");
+  const [advanceSection, setAdvanceSection] = useState<AdvanceSectionId>("characteristics");
   const [state, setState] = useState<AppState>(defaultState);
   const [hydrated, setHydrated] = useState(false);
   const [talentQuery, setTalentQuery] = useState("");
@@ -320,12 +438,18 @@ export default function Home() {
   const [catalogKind, setCatalogKind] = useState<CatalogKind | "all">("all");
   const [creationMode, setCreationMode] = useState(false);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
+  const [ruleDetail, setRuleDetail] = useState<RuleDetail | null>(null);
 
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved) as Partial<AppState>;
+        const parsed = JSON.parse(saved) as Partial<AppState> & {
+          criticalWounds?: string;
+          influence?: string;
+          contacts?: string;
+          psychicPowers?: string;
+        };
         setState((current) => ({
           ...current, ...parsed,
           identity: { ...current.identity, ...parsed.identity },
@@ -336,6 +460,16 @@ export default function Home() {
           inventory: parsed.inventory ?? current.inventory,
           purchases: parsed.purchases ?? current.purchases,
           activeConditions: parsed.activeConditions ?? current.activeConditions,
+          mutations: parsed.mutations ?? current.mutations,
+          influenceEntries: normalizeRows(parsed.influenceEntries, 8, emptyInfluenceEntry).map((entry, index) => index === 0 ? {
+            ...entry,
+            service: entry.service || parsed.influence || "",
+            contacts: entry.contacts || parsed.contacts || "",
+          } : entry),
+          criticalWoundEntries: normalizeRows(parsed.criticalWoundEntries, 5, emptyCriticalWoundEntry).map((entry, index) => index === 0 ? { ...entry, effect: entry.effect || parsed.criticalWounds || "" } : entry),
+          weaponEntries: normalizeRows(parsed.weaponEntries, 5, emptyWeaponEntry),
+          armorEntries: normalizeRows(parsed.armorEntries, 5, emptyArmorEntry),
+          psychicPowerEntries: normalizeRows(parsed.psychicPowerEntries, 10, emptyPsychicPowerEntry).map((entry, index) => index === 0 ? { ...entry, effect: entry.effect || parsed.psychicPowers || "" } : entry),
         }));
       }
     } catch {
@@ -398,6 +532,14 @@ export default function Home() {
 
   const setIdentity = (key: keyof AppState["identity"], value: string) => setState((current) => ({ ...current, identity: { ...current.identity, [key]: value } }));
   const setTextState = (key: keyof AppState, value: string | number) => setState((current) => ({ ...current, [key]: value }));
+  const updateRow = <K extends "influenceEntries" | "criticalWoundEntries" | "weaponEntries" | "armorEntries" | "psychicPowerEntries">(
+    key: K,
+    index: number,
+    patch: Partial<AppState[K][number]>,
+  ) => setState((current) => ({
+    ...current,
+    [key]: current[key].map((entry, entryIndex) => entryIndex === index ? { ...entry, ...patch } : entry),
+  }));
 
   const buySkill = (skillId: string) => {
     const skill = SKILLS.find((entry) => entry.id === skillId);
@@ -529,6 +671,44 @@ export default function Home() {
     })
     : [];
 
+  const openTalentDetail = (talentEntry: Talent) => setRuleDetail({
+    title: talentEntry.name,
+    eyebrow: "Талант",
+    page: talentEntry.page,
+    description: TALENT_RULE_TEXT[talentEntry.id],
+    facts: [
+      { label: "Стоимость", value: `${talentEntry.xpCost} ОО` },
+      { label: "Требования", value: talentEntry.requirements },
+      ...(talentEntry.choice ? [{ label: "Выбор", value: talentEntry.choice }] : []),
+    ],
+  });
+
+  const openItemDetail = (item: CatalogItem) => setRuleDetail({
+    title: item.name,
+    eyebrow: item.category,
+    page: item.page,
+    facts: [
+      ...Object.entries(item.stats).map(([label, value]) => ({ label, value })),
+      { label: "Вес", value: item.weight },
+      { label: "Цена", value: item.price },
+      { label: "Доступность", value: item.availability },
+    ],
+    traits: item.traits || undefined,
+  });
+
+  const openSpecializationDetail = (key: string) => {
+    const entry = allSpecializations.find((specialization) => specialization.key === key);
+    if (!entry) return;
+    const text = SKILL_RULE_TEXT[entry.skill.id]?.specializations[entry.id];
+    setRuleDetail({
+      title: `${entry.skill.name} (${entry.name})`,
+      eyebrow: "Специализация",
+      page: entry.skill.page,
+      description: text?.description,
+      facts: text?.opposedBy ? [{ label: "Встречная проверка", value: text.opposedBy }] : undefined,
+    });
+  };
+
   return (
     <main className="site-stage">
       <div className="ambient-grain" />
@@ -546,8 +726,7 @@ export default function Home() {
 
           <header className="masthead">
             <div className="authority-mark"><span className="skull">☠</span><span className="wings left" /><span className="wings right" /></div>
-            <div className="masthead-copy"><p className="eyebrow">Автономный реестр · перевод 1.01 · локальное сохранение</p><h1>Имперский датаслейт</h1><p className="document-id">Единая база персонажа, развития и арсенала · источник каждой записи указан</p></div>
-            <div className="status-stamp"><small>База правил</small><strong>СВЕРЕНА</strong><span>{RULE_DATA_COUNTS.talents} талантов · {RULE_DATA_COUNTS.skills} умений</span></div>
+            <div className="masthead-copy"><p className="eyebrow">Imperium Maledictum</p><h1>Имперский датаслейт</h1></div>
           </header>
 
           <nav className="chapter-tabs" aria-label="Разделы датаслейта">
@@ -558,7 +737,203 @@ export default function Home() {
             <span className="corner-ornament tl" aria-hidden="true" /><span className="corner-ornament tr" aria-hidden="true" /><span className="corner-ornament bl" aria-hidden="true" /><span className="corner-ornament br" aria-hidden="true" />
 
             {activeTab === "sheet" && (
-              <div className="chapter-page sheet-page">
+              <>
+              <div className="mobile-official-sheet">
+                <header className="mobile-sheet-title">
+                  <div><small>Лист персонажа</small><h1>{state.identity.name || "Новый агент"}</h1></div>
+                  <span>IM</span>
+                </header>
+
+                <nav className="sheet-page-switch" aria-label="Страницы листа персонажа">
+                  <button type="button" className={sheetPage === "dossier" ? "active" : ""} onClick={() => setSheetPage("dossier")}><span>I</span>Досье</button>
+                  <button type="button" className={sheetPage === "combat" ? "active" : ""} onClick={() => setSheetPage("combat")}><span>II</span>Бой</button>
+                </nav>
+
+                {sheetPage === "dossier" ? (
+                  <div className="mobile-sheet-flow">
+                    <MobileSheetSection number="01" title="Персонаж" defaultOpen>
+                      <div className="mobile-field-stack">
+                        <Field label="Имя персонажа" value={state.identity.name} onChange={(value) => setIdentity("name", value)} />
+                        <label className="form-field"><span>Происхождение</span><select value={state.identity.origin} onChange={(event) => setIdentity("origin", event.target.value)}>{ORIGINS.map((entry) => <option key={entry}>{entry}</option>)}</select></label>
+                        <label className="form-field"><span>Служба</span><select value={state.identity.service} onChange={(event) => setIdentity("service", event.target.value)}>{SERVICES.map((entry) => <option key={entry}>{entry}</option>)}</select></label>
+                        <label className="form-field"><span>Роль</span><select value={state.identity.role} onChange={(event) => setIdentity("role", event.target.value)}>{ROLES.map((entry) => <option key={entry}>{entry}</option>)}</select></label>
+                        <Field label="Покровитель" value={state.identity.patron} onChange={(value) => setIdentity("patron", value)} />
+                      </div>
+                      <div className="mobile-field-grid three-columns">
+                        <Field label="Возраст" value={state.identity.age} onChange={(value) => setIdentity("age", value)} />
+                        <Field label="Глаза" value={state.identity.eyes} onChange={(value) => setIdentity("eyes", value)} />
+                        <Field label="Волосы" value={state.identity.hair} onChange={(value) => setIdentity("hair", value)} />
+                        <Field label="Рост" value={state.identity.height} onChange={(value) => setIdentity("height", value)} />
+                        <Field label="Вес" value={state.identity.weight} onChange={(value) => setIdentity("weight", value)} />
+                        <label className="form-field"><span>Ведущая рука</span><select value={state.identity.handedness} onChange={(event) => setIdentity("handedness", event.target.value)}><option>Правая</option><option>Левая</option></select></label>
+                      </div>
+                      <TextAreaField label="Отличительные черты" value={state.identity.distinguishingFeatures} onChange={(value) => setIdentity("distinguishingFeatures", value)} />
+                      <div className="mobile-value-pair">
+                        <label><span>Свободный опыт</span><strong>{availableXp}</strong></label>
+                        <label><span>Потраченный опыт</span><strong>{spentXp}</strong></label>
+                      </div>
+                    </MobileSheetSection>
+
+                    <MobileSheetSection number="02" title="Характеристики" defaultOpen>
+                      <div className="mobile-characteristic-head"><span>Характеристика</span><span>Нач.</span><span>Ул.</span><span>Тек.</span></div>
+                      <div className="mobile-characteristic-list">
+                        {CHARACTERISTICS.map((characteristic) => {
+                          const row = state.characteristics[characteristic.id];
+                          return (
+                            <div className="mobile-characteristic-row" key={characteristic.id}>
+                              <span><b>{characteristic.short}</b><small>{characteristic.name}</small></span>
+                              <input aria-label={`${characteristic.name}: начальное значение`} type="number" min={1} max={100} value={row.starting} onChange={(event) => setState((current) => ({ ...current, characteristics: { ...current.characteristics, [characteristic.id]: { ...row, starting: Number(event.target.value) || 0 } } }))} />
+                              <input aria-label={`${characteristic.name}: улучшения`} type="number" min={0} value={row.advances} onChange={(event) => setState((current) => ({ ...current, characteristics: { ...current.characteristics, [characteristic.id]: { ...row, advances: Math.max(0, Number(event.target.value) || 0) } } }))} />
+                              <strong>{characteristicValues[characteristic.id]}</strong>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </MobileSheetSection>
+
+                    <MobileSheetSection number="03" title="Судьба и порча">
+                      <div className="mobile-stat-cards">
+                        <div><span>Судьба</span><label><small>Текущая</small><input type="number" min={0} value={state.fateCurrent} onChange={(event) => setTextState("fateCurrent", Number(event.target.value) || 0)} /></label><label><small>Всего</small><input type="number" min={0} value={state.fateTotal} onChange={(event) => setTextState("fateTotal", Number(event.target.value) || 0)} /></label></div>
+                        <div><span>Порча</span><label className="single-value"><small>Всего</small><input type="number" min={0} value={state.corruption} onChange={(event) => setTextState("corruption", Number(event.target.value) || 0)} /></label></div>
+                      </div>
+                      <TextAreaField label="Мутации и пагубы" value={state.mutations} onChange={(value) => setTextState("mutations", value)} />
+                    </MobileSheetSection>
+
+                    <MobileSheetSection number="04" title="Умения и специализации" defaultOpen>
+                      <div className="mobile-skill-head"><span>Умение</span><span>Хар.</span><span>Ул.</span><span>Всего</span></div>
+                      <div className="mobile-skill-list">
+                        {SKILLS.map((skill) => {
+                          const rank = state.skillRanks[skill.id] ?? 0;
+                          const characteristic = CHARACTERISTICS.find((entry) => entry.id === skill.characteristic)!;
+                          const specializations = skill.specializations.flatMap((entry) => {
+                            const specializationRank = state.specializationRanks[`${skill.id}:${entry.id}`] ?? 0;
+                            return specializationRank > 0 ? [{ ...entry, rank: specializationRank }] : [];
+                          });
+                          return (
+                            <div className="mobile-skill-group" key={skill.id}>
+                              <button type="button" className="mobile-skill-row" onClick={() => setSelectedSkillId(skill.id)} aria-haspopup="dialog">
+                                <span><strong>{skill.name}</strong>{specializations.length > 0 && <small>{specializations.map((entry) => entry.name).join(", ")}</small>}</span>
+                                <em>{characteristic.short} {characteristicValues[skill.characteristic]}</em>
+                                <b>{rank}</b>
+                                <strong>{characteristicValues[skill.characteristic] + (rank * 5)}</strong>
+                                <i aria-hidden="true">›</i>
+                              </button>
+                              {specializations.map((entry) => <button type="button" className="mobile-specialization-row" key={entry.id} onClick={() => openSpecializationDetail(`${skill.id}:${entry.id}`)}><span>{entry.name}</span><small>{entry.rank}</small><strong>{characteristicValues[skill.characteristic] + (rank * 5) + (entry.rank * 5)}</strong><i>›</i></button>)}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </MobileSheetSection>
+
+                    <MobileSheetSection number="05" title="Цели"><TextAreaField label="Цели" value={state.goals} onChange={(value) => setTextState("goals", value)} /></MobileSheetSection>
+                    <MobileSheetSection number="06" title="Связи"><TextAreaField label="Связи" value={state.connections} onChange={(value) => setTextState("connections", value)} /></MobileSheetSection>
+
+                    <MobileSheetSection number="07" title="Влияние">
+                      <div className="mobile-record-head influence-head"><span>Служба</span><span>Уровень</span><span>Контакты</span></div>
+                      <div className="mobile-influence-list">
+                        {state.influenceEntries.map((entry, index) => <div className="mobile-influence-row" key={index}><input aria-label={`Влияние ${index + 1}: служба`} value={entry.service} onChange={(event) => updateRow("influenceEntries", index, { service: event.target.value })} /><input aria-label={`Влияние ${index + 1}: уровень`} value={entry.level} onChange={(event) => updateRow("influenceEntries", index, { level: event.target.value })} /><input aria-label={`Влияние ${index + 1}: контакты`} value={entry.contacts} onChange={(event) => updateRow("influenceEntries", index, { contacts: event.target.value })} /></div>)}
+                      </div>
+                    </MobileSheetSection>
+
+                    <MobileSheetSection number="08" title="Заметки"><TextAreaField label="Заметки" value={state.notes} onChange={(value) => setTextState("notes", value)} /></MobileSheetSection>
+                    <MobileSheetSection number="09" title="Пророчество"><TextAreaField label="Пророчество" value={state.prophecy} onChange={(value) => setTextState("prophecy", value)} /></MobileSheetSection>
+                    <MobileSheetSection number="10" title="Средства">
+                      <div className="mobile-field-grid two-columns"><label className="form-field"><span>Соляры</span><input type="number" min={0} value={state.solars} onChange={(event) => setTextState("solars", Number(event.target.value) || 0)} /></label><Field label="Прочие валюты" value={state.otherCurrencies} onChange={(value) => setTextState("otherCurrencies", value)} /></div>
+                    </MobileSheetSection>
+
+                    <MobileSheetSection number="11" title="Таланты" defaultOpen>
+                      {ownedTalents.length === 0 ? <p className="mobile-empty">Таланты не выбраны</p> : <div className="mobile-tap-list">{ownedTalents.map((talentEntry, index) => <div className="mobile-tap-row" key={`${talentEntry.id}-${index}`}><button type="button" onClick={() => openTalentDetail(talentEntry)}><span><strong>{talentEntry.name}</strong></span><i>›</i></button><button type="button" className="icon-action" onClick={() => removeTalent(talentEntry.id)} aria-label={`Убрать ${talentEntry.name}`}>×</button></div>)}</div>}
+                      <button className="mobile-section-action" type="button" onClick={() => openTab("advance")}>Открыть развитие</button>
+                    </MobileSheetSection>
+                  </div>
+                ) : (
+                  <div className="mobile-sheet-flow">
+                    <MobileSheetSection number="01" title="Инициатива и раны" defaultOpen>
+                      <div className="mobile-combat-vitals">
+                        <div><small>Инициатива</small><strong>{initiative}</strong></div>
+                        <label><small>Раны сейчас</small><input type="number" min={0} value={state.woundsCurrent} onChange={(event) => setTextState("woundsCurrent", Number(event.target.value) || 0)} /></label>
+                        <div><small>Раны максимум</small><strong>{maxWounds}</strong></div>
+                      </div>
+                    </MobileSheetSection>
+
+                    <MobileSheetSection number="02" title="Критические раны" defaultOpen>
+                      <div className="mobile-section-note">Максимум: {maxCriticalWounds}</div>
+                      <div className="mobile-critical-list">
+                        {state.criticalWoundEntries.map((entry, index) => <div key={index}><input aria-label={`Критическая рана ${index + 1}: зона`} placeholder="Зона" value={entry.location} onChange={(event) => updateRow("criticalWoundEntries", index, { location: event.target.value })} /><input aria-label={`Критическая рана ${index + 1}: эффект`} placeholder="Эффект" value={entry.effect} onChange={(event) => updateRow("criticalWoundEntries", index, { effect: event.target.value })} /></div>)}
+                      </div>
+                    </MobileSheetSection>
+
+                    <MobileSheetSection number="03" title="Оружие" defaultOpen>
+                      <div className="mobile-record-list">
+                        {state.weaponEntries.map((entry, index) => (
+                          <details className="mobile-record" key={index}>
+                            <summary><span><small>Оружие {index + 1}</small><strong>{entry.name || "Пустая строка"}</strong></span><em>{entry.damage && `Урон ${entry.damage}`}</em><i>⌄</i></summary>
+                            <div className="mobile-record-fields weapon-fields">
+                              <Field label="Название" value={entry.name} onChange={(value) => updateRow("weaponEntries", index, { name: value })} />
+                              <Field label="Специализация" value={entry.specialization} onChange={(value) => updateRow("weaponEntries", index, { specialization: value })} />
+                              <Field label="Проверка" value={entry.test} onChange={(value) => updateRow("weaponEntries", index, { test: value })} />
+                              <Field label="Урон" value={entry.damage} onChange={(value) => updateRow("weaponEntries", index, { damage: value })} />
+                              <Field label="Дальность" value={entry.range} onChange={(value) => updateRow("weaponEntries", index, { range: value })} />
+                              <Field label="Магазин" value={entry.magazine} onChange={(value) => updateRow("weaponEntries", index, { magazine: value })} />
+                              <Field label="Вес" value={entry.weight} onChange={(value) => updateRow("weaponEntries", index, { weight: value })} />
+                              <Field label="Свойства" value={entry.traits} onChange={(value) => updateRow("weaponEntries", index, { traits: value })} />
+                            </div>
+                          </details>
+                        ))}
+                      </div>
+                    </MobileSheetSection>
+
+                    <MobileSheetSection number="04" title="Броня">
+                      <div className="mobile-record-list">
+                        {state.armorEntries.map((entry, index) => (
+                          <details className="mobile-record" key={index}>
+                            <summary><span><small>Броня {index + 1}</small><strong>{entry.name || "Пустая строка"}</strong></span><em>{entry.armor && `Броня ${entry.armor}`}</em><i>⌄</i></summary>
+                            <div className="mobile-record-fields armor-fields">
+                              <Field label="Название" value={entry.name} onChange={(value) => updateRow("armorEntries", index, { name: value })} />
+                              <Field label="Зоны защиты" value={entry.locations} onChange={(value) => updateRow("armorEntries", index, { locations: value })} />
+                              <Field label="Броня" value={entry.armor} onChange={(value) => updateRow("armorEntries", index, { armor: value })} />
+                              <Field label="Вес" value={entry.weight} onChange={(value) => updateRow("armorEntries", index, { weight: value })} />
+                              <Field label="Свойства" value={entry.traits} onChange={(value) => updateRow("armorEntries", index, { traits: value })} />
+                            </div>
+                          </details>
+                        ))}
+                      </div>
+                      <div className="hit-location-grid" aria-label="Зоны попадания"><span><b>1</b>Голова</span><span><b>2</b>Левая рука</span><span><b>3</b>Правая рука</span><span><b>4</b>Левая нога</span><span><b>5</b>Правая нога</span><span><b>6–0</b>Торс</span></div>
+                    </MobileSheetSection>
+
+                    <MobileSheetSection number="05" title="Боевые заметки"><TextAreaField label="Боевые заметки" value={state.combatNotes} onChange={(value) => setTextState("combatNotes", value)} /></MobileSheetSection>
+                    <MobileSheetSection number="06" title="Снаряжение"><TextAreaField label="Снаряжение" value={state.equipmentNotes} onChange={(value) => setTextState("equipmentNotes", value)} /></MobileSheetSection>
+                    <MobileSheetSection number="07" title="Вес">
+                      <div className="mobile-value-pair"><label><span>Текущий</span><strong className={carriedWeight > carryCapacity ? "danger-text" : ""}>{carriedWeight}</strong></label><label><span>Максимальный</span><strong>{carryCapacity}</strong></label></div>
+                    </MobileSheetSection>
+
+                    <MobileSheetSection number="08" title="Психосилы">
+                      <div className="mobile-record-list">
+                        {state.psychicPowerEntries.map((entry, index) => (
+                          <details className="mobile-record" key={index}>
+                            <summary><span><small>Психосила {index + 1}</small><strong>{entry.name || "Пустая строка"}</strong></span><em>{entry.warpRating && `Варп ${entry.warpRating}`}</em><i>⌄</i></summary>
+                            <div className="mobile-record-fields psychic-fields">
+                              <Field label="Название" value={entry.name} onChange={(value) => updateRow("psychicPowerEntries", index, { name: value })} />
+                              <Field label="Варп-рейтинг" value={entry.warpRating} onChange={(value) => updateRow("psychicPowerEntries", index, { warpRating: value })} />
+                              <Field label="Проверка" value={entry.test} onChange={(value) => updateRow("psychicPowerEntries", index, { test: value })} />
+                              <Field label="Дальность" value={entry.range} onChange={(value) => updateRow("psychicPowerEntries", index, { range: value })} />
+                              <Field label="Цель" value={entry.target} onChange={(value) => updateRow("psychicPowerEntries", index, { target: value })} />
+                              <Field label="Длительность" value={entry.duration} onChange={(value) => updateRow("psychicPowerEntries", index, { duration: value })} />
+                              <TextAreaField label="Эффект" value={entry.effect} onChange={(value) => updateRow("psychicPowerEntries", index, { effect: value })} />
+                            </div>
+                          </details>
+                        ))}
+                      </div>
+                    </MobileSheetSection>
+
+                    <MobileSheetSection number="09" title="Варп-заряд" defaultOpen>
+                      <div className="mobile-combat-vitals two"><label><small>Текущий</small><input type="number" min={0} value={state.warpCharge} onChange={(event) => setTextState("warpCharge", Number(event.target.value) || 0)} /></label><div><small>Порог</small><strong>{hasTalent("psyker") ? warpThreshold : "—"}</strong></div></div>
+                    </MobileSheetSection>
+                  </div>
+                )}
+              </div>
+
+              <div className="chapter-page sheet-page legacy-sheet-layout">
                 <header className="chapter-heading"><div><p>I · Лист персонажа</p><h2>{state.identity.name || "Новый агент"}</h2></div><p>Поля повторяют официальный двухстраничный бланк на стр. 363–364. Производные значения считаются автоматически.</p></header>
 
                 <section className="mobile-vitals-strip" aria-label="Краткое состояние персонажа">
@@ -629,6 +1004,7 @@ export default function Home() {
                   <article className="ruled-panel notes-panel"><div className="panel-heading compact"><div><span>Официальные поля</span><h3>Связи и записи</h3></div></div><TextAreaField label="Цели" value={state.goals} onChange={(value) => setTextState("goals", value)} /><TextAreaField label="Связи" value={state.connections} onChange={(value) => setTextState("connections", value)} /><TextAreaField label="Влияние на службы" value={state.influence} onChange={(value) => setTextState("influence", value)} /><TextAreaField label="Контакты" value={state.contacts} onChange={(value) => setTextState("contacts", value)} /><TextAreaField label="Пророчество" value={state.prophecy} onChange={(value) => setTextState("prophecy", value)} /><TextAreaField label="Психосилы" value={state.psychicPowers} onChange={(value) => setTextState("psychicPowers", value)} /><TextAreaField label="Заметки" value={state.notes} onChange={(value) => setTextState("notes", value)} /><div className="currency-row"><label><span>Соляры</span><input type="number" min={0} value={state.solars} onChange={(event) => setTextState("solars", Number(event.target.value) || 0)} /></label><Field label="Прочие валюты" value={state.otherCurrencies} onChange={(value) => setTextState("otherCurrencies", value)} /></div></article>
                 </div>
               </div>
+              </>
             )}
 
             {activeTab === "advance" && (
@@ -636,51 +1012,54 @@ export default function Home() {
                 <header className="chapter-heading"><div><p>II · Развитие персонажа</p><h2>Опыт и приобретения</h2></div><p>Стоимость берётся из таблиц на стр. 90. Покупки сразу меняют лист персонажа и сохраняются в журнале.</p></header>
                 <section className="xp-ledger dark-panel"><label><small>Получено опыта</small><input type="number" min={0} value={state.totalXp} onChange={(event) => setTextState("totalXp", Number(event.target.value) || 0)} /></label><span className="ledger-divider">−</span><div><small>Потрачено</small><strong>{spentXp}</strong></div><span className="ledger-divider">=</span><div className="available-xp"><small>Доступно</small><strong className={availableXp < 0 ? "danger-text" : ""}>{availableXp}</strong></div><SourceBadge page={90} /></section>
 
-                <div className="mode-strip"><div><strong>Режим создания персонажа</strong><small>Стартовые таланты службы и роли добавляются без траты опыта и могут игнорировать обычные требования.</small></div><button type="button" className={creationMode ? "on" : ""} aria-pressed={creationMode} onClick={() => setCreationMode((value) => !value)}><i />{creationMode ? "Включён" : "Выключен"}</button></div>
+                <nav className="advance-section-tabs" aria-label="Разделы развития">
+                  {advanceSections.map((section) => <button type="button" key={section.id} className={advanceSection === section.id ? "active" : ""} onClick={() => setAdvanceSection(section.id)}>{section.label}</button>)}
+                </nav>
+
+                <div className={advanceSection === "talents" ? "mode-strip" : "mode-strip section-hidden"}><div><strong>Создание персонажа</strong></div><button type="button" className={creationMode ? "on" : ""} aria-pressed={creationMode} onClick={() => setCreationMode((value) => !value)}><i />{creationMode ? "Включено" : "Выключено"}</button></div>
 
                 <div className="advance-catalog-grid">
-                  <article className="ruled-panel advancement-list"><div className="panel-heading"><div><span>+1 к показателю</span><h3>Характеристики</h3></div></div>{CHARACTERISTICS.map((characteristic) => { const nextValue = characteristicValues[characteristic.id] + 1; const cost = characteristicAdvanceCost(nextValue); return <div className="purchase-row" key={characteristic.id}><div><strong>{characteristic.name}</strong><small>{characteristicValues[characteristic.id]} → {nextValue}</small></div><span>{cost === null ? "Предел" : `${cost} ОО`}</span><button type="button" disabled={cost === null || availableXp < cost} onClick={() => buyCharacteristic(characteristic.id)}>Купить</button></div>; })}</article>
-                  <article className="ruled-panel advancement-list"><div className="panel-heading"><div><span>+5 за ступень</span><h3>Умения</h3></div><SourceBadge page={90} /></div>{SKILLS.map((skill) => { const rank = state.skillRanks[skill.id] ?? 0; const cost = SKILL_ADVANCE_COSTS[rank]; return <div className="purchase-row" key={skill.id}><div><strong>{skill.name}</strong><small>{rank}/4 · итог {characteristicValues[skill.characteristic] + rank * 5}</small></div><span>{cost === undefined ? "Макс." : `${cost} ОО`}</span><button type="button" disabled={cost === undefined || availableXp < cost} onClick={() => buySkill(skill.id)}>Купить</button></div>; })}</article>
+                  <article className={advanceSection === "characteristics" ? "ruled-panel advancement-list" : "ruled-panel advancement-list section-hidden"}><div className="panel-heading"><div><h3>Характеристики</h3></div></div>{CHARACTERISTICS.map((characteristic) => { const nextValue = characteristicValues[characteristic.id] + 1; const cost = characteristicAdvanceCost(nextValue); return <div className="purchase-row" key={characteristic.id}><div><strong>{characteristic.name}</strong><small>{characteristicValues[characteristic.id]} → {nextValue}</small></div><span>{cost === null ? "Предел" : `${cost} ОО`}</span><button type="button" disabled={cost === null || availableXp < cost} onClick={() => buyCharacteristic(characteristic.id)}>Купить</button></div>; })}</article>
+                  <article className={advanceSection === "skills" ? "ruled-panel advancement-list" : "ruled-panel advancement-list section-hidden"}><div className="panel-heading"><div><h3>Умения</h3></div></div>{SKILLS.map((skill) => { const rank = state.skillRanks[skill.id] ?? 0; const cost = SKILL_ADVANCE_COSTS[rank]; return <div className="purchase-row" key={skill.id}><button className="purchase-info-button" type="button" onClick={() => setSelectedSkillId(skill.id)}><strong>{skill.name}</strong><small>{rank}/4 · {characteristicValues[skill.characteristic] + rank * 5}</small></button><span>{cost === undefined ? "Макс." : `${cost} ОО`}</span><button type="button" disabled={cost === undefined || availableXp < cost} onClick={() => buySkill(skill.id)}>Купить</button></div>; })}</article>
                 </div>
 
-                <article className="ruled-panel directory-panel">
-                  <div className="directory-heading"><div><span>Полный справочник</span><h3>Специализации · {RULE_DATA_COUNTS.specializations}</h3></div><input type="search" value={specializationQuery} onChange={(event) => setSpecializationQuery(event.target.value)} placeholder="Поиск по умению или специализации…" /></div>
-                  <div className="directory-list specialization-directory">{filteredSpecializations.map((entry) => { const rank = state.specializationRanks[entry.key] ?? 0; const cost = SKILL_ADVANCE_COSTS[rank]; const ruleText = SKILL_RULE_TEXT[entry.skill.id]?.specializations[entry.id]?.description; return <div className="directory-row" key={entry.key}><div><span>{entry.skill.name}</span><strong>{entry.name}{entry.special ? " · Особое" : ""}</strong><small>{ruleText}</small></div><SourceBadge page={entry.skill.page} /><b>{rank}/4</b><button type="button" disabled={cost === undefined || availableXp < cost} onClick={() => buySpecialization(entry.key)}>{cost === undefined ? "Максимум" : `${cost} ОО`}</button></div>; })}</div>
+                <article className={advanceSection === "specializations" ? "ruled-panel directory-panel" : "ruled-panel directory-panel section-hidden"}>
+                  <div className="directory-heading"><div><h3>Специализации</h3></div><input type="search" value={specializationQuery} onChange={(event) => setSpecializationQuery(event.target.value)} placeholder="Поиск…" /></div>
+                  <div className="directory-list specialization-directory">{filteredSpecializations.map((entry) => { const rank = state.specializationRanks[entry.key] ?? 0; const cost = SKILL_ADVANCE_COSTS[rank]; return <div className="directory-row" key={entry.key}><button className="directory-row-copy" type="button" onClick={() => openSpecializationDetail(entry.key)}><span>{entry.skill.name}</span><strong>{entry.name}</strong><i>›</i></button><b>{rank}/4</b><button type="button" disabled={cost === undefined || availableXp < cost} onClick={() => buySpecialization(entry.key)}>{cost === undefined ? "Макс." : `${cost} ОО`}</button></div>; })}</div>
                 </article>
 
-                <article className="ruled-panel directory-panel">
-                  <div className="directory-heading"><div><span>Все записи указателя</span><h3>Таланты · {RULE_DATA_COUNTS.talents}</h3></div><input type="search" value={talentQuery} onChange={(event) => setTalentQuery(event.target.value)} placeholder="Название, требование или вариант…" /></div>
-                  <p className="directory-disclaimer">Текст требований перенесён в базу; источник указан на каждой карточке. Проверки сюжетных и составных требований остаются за ведущим.</p>
-                  <div className="directory-list talent-directory">{filteredTalents.map((talentEntry) => { const blocker = talentBlocker(talentEntry); const count = state.talents.filter((id) => id === talentEntry.id).length; return <div className="directory-row talent-catalog-row" key={talentEntry.id}><div><span>{talentEntry.choice ? `Выбор: ${talentEntry.choice}` : "Талант"}</span><strong>{talentEntry.name}{count > 0 ? ` ×${count}` : ""}</strong><small>{talentEntry.requirements}</small></div><SourceBadge page={talentEntry.page} /><b>{creationMode ? "0 ОО" : "100 ОО"}</b><button type="button" disabled={Boolean(blocker)} title={blocker ?? "Требования следует сверить с текущим персонажем"} onClick={() => buyTalent(talentEntry)}>{blocker ?? (creationMode ? "Добавить" : "Купить")}</button></div>; })}</div>
+                <article className={advanceSection === "talents" ? "ruled-panel directory-panel" : "ruled-panel directory-panel section-hidden"}>
+                  <div className="directory-heading"><div><h3>Таланты</h3></div><input type="search" value={talentQuery} onChange={(event) => setTalentQuery(event.target.value)} placeholder="Поиск…" /></div>
+                  <div className="directory-list talent-directory">{filteredTalents.map((talentEntry) => { const blocker = talentBlocker(talentEntry); const count = state.talents.filter((id) => id === talentEntry.id).length; return <div className="directory-row talent-catalog-row" key={talentEntry.id}><button className="directory-row-copy" type="button" onClick={() => openTalentDetail(talentEntry)}><span>{talentEntry.choice || "Талант"}</span><strong>{talentEntry.name}{count > 0 ? ` ×${count}` : ""}</strong><i>›</i></button><b>{creationMode ? "0 ОО" : `${talentEntry.xpCost} ОО`}</b><button type="button" disabled={Boolean(blocker)} title={blocker ?? undefined} onClick={() => buyTalent(talentEntry)}>{blocker ?? (creationMode ? "Добавить" : "Купить")}</button></div>; })}</div>
                 </article>
 
-                <article className="experience-log"><div className="log-title"><span>ЖУРНАЛ РАЗВИТИЯ</span><b>{state.purchases.length} записей</b><button type="button" disabled={state.purchases.length === 0} onClick={undoLastPurchase}>Отменить последнюю</button></div>{state.purchases.length === 0 ? <p className="empty-note">Покупок за опыт пока нет.</p> : [...state.purchases].reverse().slice(0, 12).map((purchase) => <div key={purchase.id}><time>{purchase.kind}</time><p>{purchase.label}</p><strong>−{purchase.cost} ОО</strong></div>)}</article>
+                <article className={advanceSection === "journal" ? "experience-log" : "experience-log section-hidden"}><div className="log-title"><span>Журнал развития</span><button type="button" disabled={state.purchases.length === 0} onClick={undoLastPurchase}>Отменить последнюю</button></div>{state.purchases.length === 0 ? <p className="empty-note">Записей пока нет.</p> : [...state.purchases].reverse().slice(0, 12).map((purchase) => <div key={purchase.id}><p>{purchase.label}</p><strong>−{purchase.cost} ОО</strong></div>)}</article>
               </div>
             )}
 
             {activeTab === "inventory" && (
               <div className="chapter-page inventory-page rules-database-page">
-                <header className="chapter-heading"><div><p>III · Арсенал</p><h2>Каталог и инвентарь</h2></div><p>{RULE_DATA_COUNTS.catalogItems} позиций из таблиц главы V: оружие, боеприпасы, взрывчатка, броня, носимое снаряжение, инструменты и аугметика.</p></header>
-                <section className="inventory-summary dark-panel"><div><small>Позиций в инвентаре</small><strong>{state.inventory.reduce((sum, entry) => sum + entry.quantity, 0)}</strong></div><div><small>Текущий вес</small><strong className={carriedWeight > carryCapacity ? "danger-text" : ""}>{carriedWeight}</strong></div><div><small>Предел веса</small><strong>{carryCapacity}</strong></div><div><small>Состояние</small><strong>{carriedWeight > immobilizedWeightThreshold ? "Обездвижен" : carriedWeight > carryCapacity ? "Перегрузка" : "Норма"}</strong></div></section>
+                <header className="chapter-heading"><div><p>III · Арсенал</p><h2>Инвентарь</h2></div></header>
+                <section className="inventory-summary dark-panel"><div><small>Предметы</small><strong>{state.inventory.reduce((sum, entry) => sum + entry.quantity, 0)}</strong></div><div><small>Вес</small><strong className={carriedWeight > carryCapacity ? "danger-text" : ""}>{carriedWeight} / {carryCapacity}</strong></div><div><small>Состояние</small><strong>{carriedWeight > immobilizedWeightThreshold ? "Обездвижен" : carriedWeight > carryCapacity ? "Перегрузка" : "Норма"}</strong></div></section>
 
-                <article className="ruled-panel manifest-panel"><div className="panel-heading"><div><span>Синхронизирован с листом</span><h3>Имущество персонажа</h3></div><SourceBadge page={122} /></div>{inventoryWithItems.length === 0 ? <p className="empty-note">Найдите предмет в каталоге и нажмите «Добавить».</p> : inventoryWithItems.map((entry) => <div className="manifest-row interactive" key={entry.itemId}><div><strong>{entry.item.name}</strong><small>{entry.item.category} · вес {entry.item.weight} · стр. {entry.item.page}</small></div><span>{entry.quantity} шт.</span><button type="button" onClick={() => changeInventoryQuantity(entry.itemId, -1)}>−</button><button type="button" onClick={() => changeInventoryQuantity(entry.itemId, 1)}>+</button></div>)}</article>
+                <article className="ruled-panel manifest-panel"><div className="panel-heading"><div><h3>У персонажа</h3></div></div>{inventoryWithItems.length === 0 ? <p className="empty-note">Инвентарь пуст.</p> : inventoryWithItems.map((entry) => <div className="manifest-row interactive" key={entry.itemId}><button className="manifest-item-button" type="button" onClick={() => openItemDetail(entry.item)}><span><strong>{entry.item.name}</strong><small>{entry.item.category}</small></span><i>›</i></button><span>{entry.quantity}</span><button type="button" onClick={() => changeInventoryQuantity(entry.itemId, -1)}>−</button><button type="button" onClick={() => changeInventoryQuantity(entry.itemId, 1)}>+</button></div>)}</article>
 
                 <div className="catalog-toolbar"><input type="search" value={catalogQuery} onChange={(event) => setCatalogQuery(event.target.value)} placeholder="Поиск по названию, свойству или специализации…" /><div className="filter-chips">{(Object.keys(kindLabels) as Array<CatalogKind | "all">).map((kind) => <button type="button" key={kind} className={catalogKind === kind ? "active" : ""} onClick={() => setCatalogKind(kind)}>{kindLabels[kind]}</button>)}</div></div>
-                <div className="item-catalog-grid">{filteredCatalog.map((item) => <article className="catalog-card" key={item.id}><div className="catalog-card-top"><div><span>{item.category}</span><h3>{item.name}</h3></div><SourceBadge page={item.page} /></div><CatalogStats item={item} /><p>{item.traits || "Особые свойства в таблице не указаны."}</p><footer><span>{item.availability}</span><button type="button" onClick={() => addInventoryItem(item.id)}>Добавить</button></footer></article>)}</div>
+                <div className="item-catalog-list">{filteredCatalog.map((item) => <div className="catalog-list-row" key={item.id}><button className="catalog-list-copy" type="button" onClick={() => openItemDetail(item)}><span><small>{item.category}</small><strong>{item.name}</strong></span><i>›</i></button><button className="catalog-add-button" type="button" onClick={() => addInventoryItem(item.id)} aria-label={`Добавить ${item.name}`}>+</button></div>)}</div>
               </div>
             )}
 
             {activeTab === "reference" && (
               <div className="chapter-page reference-page rules-database-page">
-                <header className="chapter-heading"><div><p>IV · Контекстная ширма</p><h2>Действия и состояния</h2></div><p>Кликайте состояния персонажа: активные эффекты поднимаются наверх. Действия раскрываются нажатием; текст перенесён из указанных страниц книги.</p></header>
-                <article className="ruled-panel condition-reference"><div className="panel-heading"><div><span>Приложение IV</span><h3>Состояния персонажа</h3></div><SourceBadge page={356} /></div><div className="condition-reference-grid">{[...conditionReference].sort((a, b) => Number(state.activeConditions.includes(b[0])) - Number(state.activeConditions.includes(a[0]))).map(([name, effect, page]) => { const active = state.activeConditions.includes(name); return <button type="button" key={name} className={active ? "condition-card active" : "condition-card"} aria-pressed={active} onClick={() => toggleCondition(name)}><span>{active ? "АКТИВНО" : "СОСТОЯНИЕ"}</span><strong>{name}</strong><small>{effect}</small><SourceBadge page={page} /></button>; })}</div></article>
-                <article className="ruled-panel actions-reference"><div className="panel-heading"><div><span>Глава VII</span><h3>Действия в бою</h3></div><SourceBadge page={207} /></div><div className="action-reference-grid">{actionReference.map(([name, kind, detail, page], index) => <details className="reference-action-card" key={name}><summary><span>{String(index + 1).padStart(2, "0")}</span><div><small>{kind}</small><h3>{name}</h3></div><i aria-hidden="true">⌄</i></summary><div className="reference-action-rule"><p>{detail}</p><SourceBadge page={page} /></div></details>)}</div></article>
-                <aside className="rules-inset"><Seal>!</Seal><div><strong>Порядок хода</strong><p>В свой ход вы можете совершить движение и предпринять действие. Разные мелочи не требуют тратить на них действие – например, открыть дверь, сделать несколько шагов в пределах своей зоны, выхватить оружие. Ведущий определяет, потребует заявленное вами обычного или свободного действия. Общее правило – если вам нужно бросать проверку, значит на это нужно потратить обычное действие. Реакцию вы применяете в чужой ход. Если правила, таланты или снаряжение не указывают обратного, вы можете применять только одну реакцию до начала своего следующего хода.</p></div><SourceBadge page={199} /></aside>
+                <header className="chapter-heading"><div><p>IV · Ширма</p><h2>Подсказки</h2></div></header>
+                <article className="ruled-panel condition-reference"><div className="panel-heading"><div><h3>Состояния</h3></div></div><div className="condition-reference-list">{[...conditionReference].sort((a, b) => Number(state.activeConditions.includes(b[0])) - Number(state.activeConditions.includes(a[0]))).map(([name, effect, page]) => { const active = state.activeConditions.includes(name); return <div className={active ? "condition-list-row active" : "condition-list-row"} key={name}><button type="button" className="condition-copy" onClick={() => setRuleDetail({ title: String(name), eyebrow: "Состояние", page: Number(page), description: String(effect) })}><span><strong>{name}</strong>{active && <small>Активно</small>}</span><i>›</i></button><button type="button" className="condition-toggle" aria-pressed={active} onClick={() => toggleCondition(String(name))}>{active ? "✓" : "+"}</button></div>; })}</div></article>
+                <article className="ruled-panel actions-reference"><div className="panel-heading"><div><h3>Действия</h3></div></div><div className="action-reference-list">{actionReference.map(([name, kind, detail, page], index) => <button className="action-list-row" type="button" key={name} onClick={() => setRuleDetail({ title: String(name), eyebrow: String(kind), page: Number(page), description: String(detail) })}><span className="action-number">{String(index + 1).padStart(2, "0")}</span><span><small>{kind}</small><strong>{name}</strong></span><i>›</i></button>)}</div></article>
+                <button className="turn-order-card" type="button" onClick={() => setRuleDetail({ title: "Порядок хода", eyebrow: "Бой", page: 199, description: "В свой ход вы можете совершить движение и предпринять действие. Разные мелочи не требуют тратить на них действие – например, открыть дверь, сделать несколько шагов в пределах своей зоны, выхватить оружие. Ведущий определяет, потребует заявленное вами обычного или свободного действия. Общее правило – если вам нужно бросать проверку, значит на это нужно потратить обычное действие. Реакцию вы применяете в чужой ход. Если правила, таланты или снаряжение не указывают обратного, вы можете применять только одну реакцию до начала своего следующего хода." })}><span><small>Бой</small><strong>Порядок хода</strong></span><i>›</i></button>
               </div>
             )}
           </div>
 
-          <footer className="dataslate-footer"><span>IMPERIUM MALEDICTUM · ПЕРЕВОД 1.01</span><p>{hydrated ? "Данные сохранены на этом устройстве." : "Загрузка локальной записи…"}</p><span>СТР. {tabs.findIndex((tab) => tab.id === activeTab) + 1} / 4</span></footer>
+          <footer className="dataslate-footer"><span>IMPERIUM MALEDICTUM</span><p>{hydrated ? "Локальное сохранение включено" : "Загрузка…"}</p></footer>
         </div>
       </section>
       {selectedSkill && selectedSkillRules && selectedSkillCharacteristic && (
@@ -694,6 +1073,7 @@ export default function Home() {
           onClose={() => setSelectedSkillId(null)}
         />
       )}
+      {ruleDetail && <RuleDetailDialog detail={ruleDetail} onClose={() => setRuleDetail(null)} />}
     </main>
   );
 }
