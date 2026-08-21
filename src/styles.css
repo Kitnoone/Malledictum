@@ -2779,3 +2779,560 @@ body.dialog-open { overflow: hidden; }
   .mobile-field-grid.three-columns { grid-template-columns: 1fr; }
   .mobile-record-fields .textarea-field { grid-column: auto; }
 }
+
+/* Linked rule text and source pages */
+.source-badge {
+  cursor: pointer;
+  appearance: none;
+}
+.source-badge:hover { background: rgba(255, 251, 232, .72); }
+.source-badge:focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
+.book-rule-block > span .source-badge {
+  float: right;
+  min-height: 26px;
+  margin: -4px 0 -2px 10px;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  letter-spacing: .2px;
+  text-transform: none;
+}
+.dialog-inline-source { display: none; margin-bottom: 8px; }
+.rich-rule-text { color: inherit; }
+.rich-rule-text p {
+  margin: 0 0 10px;
+  color: inherit;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.62;
+  white-space: pre-line;
+}
+.rich-rule-text p:last-child { margin-bottom: 0; }
+.rich-rule-text p.rule-bullet { padding-left: 17px; text-indent: -13px; }
+.rich-rule-text strong {
+  color: #4f1014;
+  font-weight: 900;
+}
+.dark-panel .rich-rule-text strong,
+.weapon-screen .upgrade-install-rule .rich-rule-text strong { color: #f0d998; }
+
+/* Clickable lists on the official sheet */
+.owned-row-copy {
+  width: auto !important;
+  height: auto !important;
+  min-width: 0;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 5px !important;
+  cursor: pointer;
+  color: inherit !important;
+  border: 0 !important;
+  background: transparent !important;
+  text-align: left;
+}
+.owned-row-copy > span { min-width: 0; }
+.owned-row-copy i { color: var(--blood); font-size: 18px; font-style: normal; }
+.owned-row-copy:hover { background: rgba(255,255,255,.38) !important; }
+.owned-row-remove { flex: 0 0 auto; }
+
+/* Weapon dossier */
+body.weapon-screen-open { overflow: hidden; }
+.weapon-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  color: #e6ebdf;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(40, 167, 90, .12), transparent 27%),
+    linear-gradient(155deg, #0b1814, #030806 72%);
+}
+.weapon-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .22;
+  background-image: linear-gradient(rgba(60,216,124,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(60,216,124,.1) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.weapon-screen-header {
+  position: relative;
+  z-index: 2;
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: calc(9px + env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 9px max(14px, env(safe-area-inset-left));
+  border-bottom: 1px solid rgba(82, 237, 142, .34);
+  background: rgba(4, 15, 11, .92);
+  box-shadow: 0 10px 28px rgba(0,0,0,.35);
+}
+.weapon-screen-header > button:first-child {
+  width: 48px;
+  height: 48px;
+  cursor: pointer;
+  color: #65e699;
+  border: 1px solid rgba(92,230,148,.45);
+  background: rgba(15,63,38,.48);
+  font-size: 25px;
+}
+.weapon-screen-header small,
+.weapon-screen-header h2 { display: block; }
+.weapon-screen-header small { color: #7caa8d; font-size: 10px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
+.weapon-screen-header h2 { margin: 3px 0 0; color: #e7f5e9; font-family: "Cinzel", serif; font-size: clamp(17px, 4vw, 26px); line-height: 1.05; text-transform: uppercase; }
+.weapon-screen-header .source-badge { color: #a9efc1; border-color: rgba(83,231,140,.45); background: rgba(14,65,38,.42); }
+.weapon-screen-scroll {
+  position: relative;
+  z-index: 1;
+  height: calc(100dvh - 76px - env(safe-area-inset-top));
+  overflow-y: auto;
+  padding: 18px max(18px, calc((100vw - 940px) / 2)) calc(42px + env(safe-area-inset-bottom));
+  overscroll-behavior: contain;
+}
+.weapon-blueprint {
+  overflow: hidden;
+  margin: 0;
+  border: 1px solid rgba(68, 222, 129, .5);
+  background: #06140e;
+  box-shadow: 0 18px 44px rgba(0,0,0,.44), inset 0 0 38px rgba(25,134,72,.08);
+}
+.weapon-blueprint svg { width: 100%; display: block; aspect-ratio: 900 / 620; }
+.bp-background { fill: #06140e; }
+.bp-grid-minor { fill: none; stroke: rgba(48, 150, 89, .19); stroke-width: 1; }
+.bp-grid-major { fill: none; stroke: rgba(73, 205, 123, .14); stroke-width: 1.4; }
+.bp-frame { fill: none; stroke: rgba(79, 234, 143, .48); stroke-width: 1.5; }
+.bp-stroke path,
+.bp-stroke rect,
+.bp-stroke circle,
+.bp-stroke line {
+  fill: rgba(9, 65, 37, .16);
+  stroke: #52dc8c;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.bp-stroke line { fill: none; }
+.bp-detail-view { opacity: .82; }
+.bp-callout path { fill: none; stroke: rgba(83, 221, 142, .55); stroke-width: 1; }
+.bp-callout text { fill: #5fdc91; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; letter-spacing: 1px; }
+.weapon-blueprint figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 15px;
+  color: #cbe8d2;
+  border-top: 1px solid rgba(68,222,129,.35);
+  background: rgba(4,25,15,.9);
+}
+.weapon-blueprint figcaption span:last-child { text-align: right; }
+.weapon-blueprint figcaption small,
+.weapon-blueprint figcaption strong { display: block; }
+.weapon-blueprint figcaption small { color: #67977a; font-size: 9px; letter-spacing: .8px; text-transform: uppercase; }
+.weapon-blueprint figcaption strong { margin-top: 3px; color: #d8f3df; font-size: 14px; }
+.weapon-screen-tabs {
+  position: sticky;
+  top: -18px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 14px 0;
+  padding: 4px;
+  border: 1px solid rgba(82,237,142,.31);
+  background: rgba(4,16,11,.94);
+  backdrop-filter: blur(9px);
+}
+.weapon-screen-tabs button {
+  min-height: 46px;
+  cursor: pointer;
+  color: #8fb39a;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .35px;
+  text-transform: uppercase;
+}
+.weapon-screen-tabs button.active { color: #07130d; background: #52dc8c; }
+.weapon-screen-tabs span { min-width: 21px; display: inline-grid; place-items: center; margin-left: 6px; padding: 2px 5px; border-radius: 10px; background: rgba(0,0,0,.18); font-size: 10px; }
+.weapon-profile-panel,
+.weapon-upgrade-panel { display: grid; gap: 14px; }
+.weapon-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  border: 1px solid rgba(82,237,142,.26);
+  background: rgba(82,237,142,.2);
+}
+.weapon-stat-grid > div { min-height: 70px; padding: 11px; background: rgba(5,21,14,.96); }
+.weapon-stat-grid dt { color: #6e9f7f; font-size: 9px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; }
+.weapon-stat-grid dd { margin: 6px 0 0; color: #ecf7ed; font-family: "Cinzel", serif; font-size: 17px; font-weight: 700; }
+.weapon-traits-panel,
+.installed-upgrades-panel,
+.weapon-book-rule,
+.upgrade-install-rule {
+  padding: 15px;
+  border: 1px solid rgba(82,237,142,.25);
+  background: rgba(7,24,16,.88);
+}
+.weapon-traits-panel > span,
+.installed-upgrades-panel > div > span,
+.weapon-book-rule > span,
+.upgrade-install-rule > span { color: #79b78e; font-size: 10px; font-weight: 900; letter-spacing: .8px; text-transform: uppercase; }
+.weapon-traits-panel > div { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 11px; }
+.weapon-traits-panel button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 11px;
+  cursor: pointer;
+  color: #d9f3df;
+  border: 1px solid rgba(82,237,142,.38);
+  background: rgba(25,86,49,.42);
+  font-size: 13px;
+  font-weight: 800;
+}
+.weapon-traits-panel i { color: #57df8e; font-size: 18px; font-style: normal; }
+.installed-upgrades-panel > div { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.installed-upgrades-panel > div > b { color: #59df8f; }
+.installed-upgrades-panel > button {
+  width: 100%;
+  min-height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  color: inherit;
+  border: 0;
+  border-top: 1px solid rgba(82,237,142,.17);
+  background: transparent;
+  text-align: left;
+}
+.installed-upgrades-panel small,
+.installed-upgrades-panel strong { display: block; }
+.installed-upgrades-panel small { color: #6e9f7f; font-size: 9px; }
+.installed-upgrades-panel strong { margin-top: 3px; color: #d9f3df; font-size: 14px; }
+.installed-upgrades-panel i { color: #57df8e; font-size: 21px; font-style: normal; }
+.weapon-book-rule { margin: 0; color: #d9e9dc; border-left: 4px solid #45c97c; }
+.weapon-book-rule .source-badge,
+.upgrade-install-rule .source-badge { color: #9cecb8; border-color: rgba(82,237,142,.38); background: rgba(13,63,36,.48); }
+.weapon-book-rule .rich-rule-text { margin-top: 12px; }
+.upgrade-install-rule { position: relative; padding-right: 110px; border-left: 4px solid #45c97c; }
+.upgrade-install-rule .rich-rule-text { margin-top: 8px; color: #d9e9dc; }
+.upgrade-install-rule > .source-badge { position: absolute; top: 13px; right: 13px; }
+.weapon-upgrade-list { display: grid; gap: 8px; }
+.weapon-upgrade-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  padding: 10px;
+  border: 1px solid rgba(82,237,142,.2);
+  background: rgba(5,20,13,.9);
+}
+.weapon-upgrade-row.installed { border-color: rgba(82,237,142,.62); box-shadow: inset 4px 0 #52dc8c; }
+.weapon-upgrade-copy {
+  min-width: 0;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px;
+  cursor: pointer;
+  color: inherit;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.weapon-upgrade-copy small,
+.weapon-upgrade-copy strong { display: block; }
+.weapon-upgrade-copy small { color: #709d80; font-size: 9px; }
+.weapon-upgrade-copy strong { margin-top: 3px; color: #def3e2; font-size: 14px; }
+.weapon-upgrade-copy i { color: #55dc8c; font-size: 20px; font-style: normal; }
+.weapon-upgrade-row > p { grid-column: 1; margin: 0 4px 3px; color: #83a78f; font-size: 11px; line-height: 1.35; }
+.weapon-upgrade-toggle {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-width: 102px;
+  min-height: 46px;
+  align-self: center;
+  cursor: pointer;
+  color: #06130c;
+  border: 1px solid #58e292;
+  background: #58d98d;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.weapon-upgrade-row.installed .weapon-upgrade-toggle { color: #dff3e3; background: rgba(78,25,31,.75); border-color: #a94e58; }
+.weapon-upgrade-toggle:disabled { cursor: not-allowed; color: #607068; border-color: #33483b; background: #17221b; }
+
+/* Injuries in profile and reference */
+.active-injury-list { display: grid; gap: 5px; }
+.active-injury-row { display: grid; grid-template-columns: minmax(0, 1fr) 44px; border: 1px solid rgba(101,25,28,.25); background: rgba(101,25,28,.05); }
+.active-injury-row > button:first-child {
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  cursor: pointer;
+  color: inherit;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.active-injury-row > button:first-child > b { color: var(--blood); font-family: "Cinzel", serif; text-align: center; }
+.active-injury-row small,
+.active-injury-row strong { display: block; }
+.active-injury-row small { color: var(--ink-soft); font-size: 9px; }
+.active-injury-row strong { margin-top: 2px; color: var(--blood-dark); font-size: 13px; }
+.active-injury-row i { color: var(--blood); font-size: 19px; font-style: normal; }
+.active-injury-row > button:last-child { cursor: pointer; color: var(--blood); border: 0; border-left: 1px solid rgba(101,25,28,.2); background: transparent; font-size: 20px; }
+.injury-add-action { width: 100%; }
+.desktop-active-injuries { display: grid; gap: 4px; margin-top: 9px; }
+.desktop-active-injuries button {
+  min-height: 43px;
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  color: inherit;
+  border: 1px solid rgba(101,25,28,.25);
+  background: rgba(101,25,28,.04);
+  text-align: left;
+}
+.desktop-active-injuries span { color: var(--ink-soft); font-size: 9px; }
+.desktop-active-injuries strong { color: var(--blood-dark); font-size: 11px; }
+.desktop-active-injuries i { color: var(--blood); font-size: 18px; font-style: normal; }
+.injury-desktop-action { margin-top: 8px; }
+
+.injury-picker-backdrop { z-index: 220; }
+.injury-picker-dialog {
+  width: min(820px, calc(100vw - 28px));
+  max-height: min(860px, calc(100dvh - 28px));
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  overflow: hidden;
+  color: var(--ink);
+  border: 1px solid #80672d;
+  background: #ded5b8;
+  box-shadow: 0 28px 80px rgba(0,0,0,.66);
+}
+.injury-picker-dialog > header {
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  color: #f1e5c8;
+  border-bottom: 2px solid #b29654;
+  background: linear-gradient(145deg, #351012, #141411);
+}
+.injury-picker-dialog header small,
+.injury-picker-dialog header h2 { display: block; }
+.injury-picker-dialog header small { color: #c2ad76; font-size: 9px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
+.injury-picker-dialog header h2 { margin: 3px 0 0; font-family: "Cinzel", serif; font-size: 23px; text-transform: uppercase; }
+.injury-picker-dialog header button { width: 46px; height: 46px; cursor: pointer; color: #f1e5c8; border: 1px solid #9c824a; background: #4b1014; font-size: 26px; }
+.injury-picker-toolbar { display: grid; gap: 8px; padding: 10px; border-bottom: 1px solid rgba(79,56,28,.28); background: rgba(255,255,255,.19); }
+.injury-picker-toolbar input { width: 100%; min-height: 43px; font-size: 14px; }
+.injury-picker-toolbar > div { display: flex; gap: 5px; overflow-x: auto; }
+.injury-picker-toolbar button { min-width: max-content; min-height: 38px; padding: 6px 10px; cursor: pointer; color: var(--blood-dark); border: 1px solid rgba(101,25,28,.25); background: rgba(255,255,255,.23); font-size: 11px; font-weight: 800; }
+.injury-picker-toolbar button.active { color: #f1e5c8; background: var(--blood); }
+.injury-picker-list { overflow-y: auto; padding: 9px; overscroll-behavior: contain; }
+.injury-picker-list details { margin-bottom: 6px; border: 1px solid rgba(76,54,28,.29); background: rgba(255,255,255,.19); }
+.injury-picker-list summary { min-height: 56px; display: grid; grid-template-columns: 48px minmax(0, 1fr) 22px; align-items: center; gap: 7px; padding: 7px 9px; cursor: pointer; list-style: none; }
+.injury-picker-list summary::-webkit-details-marker { display: none; }
+.injury-picker-list summary > b { color: var(--blood); font-family: "Cinzel", serif; font-size: 15px; text-align: center; }
+.injury-picker-list summary small,
+.injury-picker-list summary strong { display: block; }
+.injury-picker-list summary small { color: var(--ink-soft); font-size: 9px; }
+.injury-picker-list summary strong { margin-top: 2px; color: var(--blood-dark); font-size: 14px; }
+.injury-picker-list summary i { color: var(--blood); font-size: 18px; font-style: normal; transition: transform .16s ease; }
+.injury-picker-list details[open] summary { border-bottom: 1px solid rgba(76,54,28,.25); background: rgba(101,25,28,.06); }
+.injury-picker-list details[open] summary i { transform: rotate(180deg); }
+.injury-picker-detail { padding: 12px; }
+.injury-picker-detail > span { display: block; margin: 10px 0 5px; color: var(--blood); font-size: 10px; font-weight: 900; letter-spacing: .65px; text-transform: uppercase; }
+.injury-picker-detail > span:first-child { margin-top: 0; }
+.injury-picker-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+.injury-picker-actions > button:not(.source-badge) { min-height: 43px; padding: 7px 11px; cursor: pointer; color: #f1e5c8; border: 1px solid #3a090c; background: var(--blood); font-size: 11px; font-weight: 800; }
+
+/* Reference screen navigation */
+.reference-section-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  display: flex;
+  gap: 5px;
+  margin: 0 0 12px;
+  padding: 6px;
+  overflow-x: auto;
+  border: 1px solid rgba(73,52,28,.32);
+  background: rgba(222,213,186,.95);
+  backdrop-filter: blur(9px);
+}
+.reference-section-tabs button { min-width: max-content; min-height: 42px; padding: 7px 13px; cursor: pointer; color: var(--blood-dark); border: 1px solid rgba(101,25,28,.22); background: rgba(255,255,255,.22); font-size: 12px; font-weight: 900; }
+.reference-section-tabs button.active { color: #f1e5c8; border-color: #400a0d; background: var(--blood); }
+.environment-reference,
+.injury-reference { padding: 11px; }
+.environment-reference-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.environment-reference-list > button {
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  cursor: pointer;
+  color: inherit;
+  border: 1px solid rgba(73,52,28,.24);
+  background: rgba(255,255,255,.18);
+  text-align: left;
+}
+.environment-reference-list > button:hover { background: rgba(255,255,255,.42); }
+.environment-reference-list small,
+.environment-reference-list strong { display: block; }
+.environment-reference-list small { color: var(--ink-soft); font-size: 9px; }
+.environment-reference-list strong { margin-top: 2px; color: var(--blood-dark); font-size: 13px; }
+.environment-reference-list i { color: var(--blood); font-size: 19px; font-style: normal; }
+.injury-reference-groups { display: grid; gap: 7px; }
+.injury-reference-groups > details { overflow: hidden; border: 1px solid rgba(73,52,28,.28); background: rgba(255,255,255,.15); }
+.injury-reference-groups > details > summary { min-height: 50px; display: grid; grid-template-columns: minmax(0, 1fr) 34px 20px; align-items: center; gap: 7px; padding: 7px 10px; cursor: pointer; list-style: none; color: var(--blood-dark); font-family: "Cinzel", serif; font-weight: 800; text-transform: uppercase; }
+.injury-reference-groups > details > summary::-webkit-details-marker { display: none; }
+.injury-reference-groups > details > summary b { color: var(--blood); text-align: center; }
+.injury-reference-groups > details > summary i { color: var(--blood); font-size: 18px; font-style: normal; transition: transform .16s ease; }
+.injury-reference-groups > details[open] > summary { border-bottom: 1px solid rgba(73,52,28,.25); background: rgba(101,25,28,.06); }
+.injury-reference-groups > details[open] > summary i { transform: rotate(180deg); }
+.injury-reference-groups > details > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.injury-reference-groups > details > div > button { min-height: 52px; display: grid; grid-template-columns: 42px minmax(0, 1fr) 18px; align-items: center; gap: 6px; padding: 6px 9px; cursor: pointer; color: inherit; border: 0; border-bottom: 1px solid rgba(73,52,28,.17); background: transparent; text-align: left; }
+.injury-reference-groups > details > div > button:nth-child(odd) { border-right: 1px solid rgba(73,52,28,.17); }
+.injury-reference-groups button > b { color: var(--blood); font-family: "Cinzel", serif; text-align: center; }
+.injury-reference-groups button strong,
+.injury-reference-groups button small { display: block; }
+.injury-reference-groups button strong { color: var(--blood-dark); font-size: 12px; }
+.injury-reference-groups button small { margin-top: 2px; color: #2d7548; font-size: 9px; font-weight: 900; text-transform: uppercase; }
+.injury-reference-groups button i { color: var(--blood); font-size: 18px; font-style: normal; }
+
+/* Clickable book page */
+.book-page-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(4,3,2,.88);
+  backdrop-filter: blur(7px);
+}
+.book-page-dialog {
+  width: min(920px, 100%);
+  height: min(940px, 100%);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid #a68c4f;
+  background: #191813;
+  box-shadow: 0 30px 100px rgba(0,0,0,.8);
+}
+.book-page-dialog > header {
+  min-height: 70px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 13px;
+  color: #efe4c8;
+  border-bottom: 1px solid #9f8246;
+  background: linear-gradient(145deg, #341013, #11110f 74%);
+}
+.book-page-dialog header > button { width: 46px; height: 46px; cursor: pointer; color: #efdfb6; border: 1px solid #9f8246; background: #451014; font-size: 23px; }
+.book-page-dialog header small,
+.book-page-dialog header h2 { display: block; }
+.book-page-dialog header small { color: #b7a16b; font-size: 9px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; }
+.book-page-dialog header h2 { margin: 3px 0 0; font-family: "Cinzel", serif; font-size: 20px; text-transform: uppercase; }
+.book-page-dialog header > span { color: #c7b178; font-family: "Cinzel", serif; font-size: 11px; }
+.book-page-scroll { overflow: auto; padding: 18px; overscroll-behavior: contain; }
+.book-page-image { width: 100%; height: auto; display: block; border: 1px solid #6f5b32; box-shadow: 0 18px 50px rgba(0,0,0,.56); }
+.book-page-transcript {
+  width: min(760px, 100%);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: clamp(22px, 5vw, 58px);
+  color: #251e16;
+  border: 1px solid #8f793f;
+  background:
+    linear-gradient(90deg, rgba(104,78,36,.05) 1px, transparent 1px),
+    linear-gradient(#e7ddbd, #d8ccaa);
+  background-size: 11px 11px, auto;
+  box-shadow: 0 20px 55px rgba(0,0,0,.52), inset 0 0 60px rgba(76,50,18,.11);
+}
+.book-page-transcript > div { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 2px solid #67181c; }
+.book-page-transcript > div > span { width: 42px; height: 42px; display: grid; place-items: center; color: #eadbb4; border-radius: 50%; background: #67181c; font-family: "Cinzel", serif; font-size: 13px; font-weight: 900; }
+.book-page-transcript > div > small { color: #67181c; font-size: 9px; font-weight: 900; letter-spacing: .8px; text-transform: uppercase; }
+.book-page-transcript h3 { margin: 20px 0 16px; color: #541216; font-family: "Cinzel", serif; font-size: clamp(21px, 4vw, 32px); text-transform: uppercase; }
+.book-page-transcript .rich-rule-text { padding-bottom: 18px; }
+.book-page-transcript .rich-rule-text + .rich-rule-text { padding-top: 18px; border-top: 1px solid rgba(86,53,25,.25); }
+.book-page-transcript .rich-rule-text p { color: #251e16; font-size: 15px; line-height: 1.68; }
+.book-page-transcript .rich-rule-text strong { color: #551317; }
+.book-page-unavailable { color: #5f503a; font-size: 15px; line-height: 1.6; }
+.book-page-transcript footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 16px; color: #67181c; border-top: 1px solid #876b38; font-family: "Cinzel", serif; font-size: 10px; letter-spacing: .7px; }
+.book-page-transcript footer b { font-size: 18px; }
+
+@media (max-width: 720px) {
+  .owned-row { grid-template-columns: 30px minmax(0, 1fr) auto; }
+  .owned-row-copy { min-height: 44px; }
+  .owned-row-copy strong { font-size: 12px; }
+  .owned-row-copy small { font-size: 10px; }
+  .source-badge { min-height: 32px; font-size: 8px; }
+  .book-rule-block > span .source-badge { display: inline-flex; min-height: 30px; }
+  .dialog-inline-source { display: flex; }
+  .rich-rule-text p { font-size: 15px; line-height: 1.66; }
+  .weapon-screen-header { grid-template-columns: 48px minmax(0, 1fr); }
+  .weapon-screen-header .source-badge { display: none; }
+  .weapon-screen-scroll { padding: 10px 10px calc(30px + env(safe-area-inset-bottom)); }
+  .weapon-blueprint svg { min-height: 240px; object-fit: cover; }
+  .weapon-blueprint figcaption { padding: 10px; }
+  .weapon-blueprint figcaption strong { font-size: 12px; }
+  .weapon-screen-tabs { top: -10px; margin: 9px 0; }
+  .weapon-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .weapon-stat-grid > div { min-height: 64px; }
+  .weapon-stat-grid dd { font-size: 15px; }
+  .weapon-traits-panel,
+  .installed-upgrades-panel,
+  .weapon-book-rule,
+  .upgrade-install-rule { padding: 12px; }
+  .upgrade-install-rule { padding-top: 48px; padding-right: 12px; }
+  .upgrade-install-rule > .source-badge { left: 12px; right: auto; }
+  .weapon-upgrade-row { grid-template-columns: minmax(0, 1fr) 94px; gap: 2px 7px; padding: 8px; }
+  .weapon-upgrade-toggle { min-width: 92px; font-size: 9px; }
+  .weapon-upgrade-row > p { font-size: 10px; }
+  .injury-picker-backdrop { padding: 0; place-items: stretch; }
+  .injury-picker-dialog { width: 100%; max-height: 100dvh; border-width: 0; }
+  .injury-picker-dialog > header { padding-top: calc(10px + env(safe-area-inset-top)); }
+  .injury-picker-actions { display: grid; grid-template-columns: 1fr; }
+  .injury-picker-actions > button { width: 100%; }
+  .reference-section-tabs { top: calc(58px + env(safe-area-inset-top)); margin-inline: -2px; }
+  .environment-reference-list { grid-template-columns: 1fr; }
+  .environment-reference-list > button { min-height: 60px; }
+  .injury-reference-groups > details > div { grid-template-columns: 1fr; }
+  .injury-reference-groups > details > div > button:nth-child(odd) { border-right: 0; }
+  .book-page-backdrop { padding: 0; }
+  .book-page-dialog { width: 100%; height: 100dvh; border: 0; }
+  .book-page-dialog > header { padding-top: calc(10px + env(safe-area-inset-top)); }
+  .book-page-scroll { padding: 8px; }
+  .book-page-transcript { min-height: 100%; padding: 20px 16px; }
+  .book-page-transcript .rich-rule-text p { font-size: 15px; }
+}
