@@ -77,23 +77,23 @@
   },
   {
     "id": "knuckleduster",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "improvised-one-handed",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "improvised-two-handed",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "knife",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "power-maul",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "bolt-pistol",
