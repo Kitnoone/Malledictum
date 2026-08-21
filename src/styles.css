@@ -2204,6 +2204,27 @@ body.dialog-open { overflow: hidden; }
 .directory-row-copy strong { color: var(--blood-dark); font-size: 13px; }
 .directory-row-copy i { grid-column: 2; grid-row: 1 / 3; color: var(--blood); font-size: 22px; font-style: normal; }
 
+/* The primary row is a details button, not a purchase button. */
+.directory-row { grid-template-columns: minmax(0, 1fr) 64px 118px; background: rgba(255,255,255,.12); }
+.directory-row > button.directory-row-copy {
+  min-width: 0;
+  width: 100%;
+  min-height: 52px;
+  justify-self: stretch;
+  padding: 8px 10px;
+  color: #241b14;
+  border: 0;
+  background: rgba(255,255,255,.28);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.directory-row > button.directory-row-copy:hover { background: rgba(255,255,255,.52); }
+.directory-row > button.directory-row-copy span { color: #695742; font-family: var(--font-ui); font-size: 11px; font-weight: 650; letter-spacing: 0; text-transform: none; }
+.directory-row > button.directory-row-copy strong { color: #241b14; font-family: var(--font-ui); font-size: 15px; font-weight: 750; letter-spacing: 0; text-transform: none; }
+.directory-row > button.directory-row-copy i { color: #731b1f; }
+
 .item-catalog-list {
   margin-top: 10px;
   overflow: hidden;
@@ -2251,6 +2272,52 @@ body.dialog-open { overflow: hidden; }
 .manifest-item-button span small,
 .manifest-item-button span strong { display: block; }
 .manifest-item-button i { color: var(--blood); font-size: 20px; font-style: normal; }
+.manifest-row.interactive > button.manifest-item-button {
+  min-width: 0;
+  width: 100%;
+  min-height: 52px;
+  justify-self: stretch;
+  padding: 7px 10px;
+  color: #241b14;
+  border: 0;
+  background: rgba(255,255,255,.28);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.manifest-row.interactive > button.manifest-item-button strong { color: #241b14; font-family: var(--font-ui); font-size: 14px; }
+.manifest-row.interactive > button.manifest-item-button small { color: #695742; font-family: var(--font-ui); font-size: 11px; }
+
+.sheet-inventory-list {
+  overflow: hidden;
+  border: 1px solid rgba(75,53,28,.32);
+  background: rgba(255,255,255,.24);
+}
+.sheet-inventory-list > button {
+  width: 100%;
+  min-height: 60px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  color: #241b14;
+  border: 0;
+  border-bottom: 1px solid rgba(75,53,28,.22);
+  background: rgba(255,255,255,.2);
+  text-align: left;
+}
+.sheet-inventory-list > button:last-child { border-bottom: 0; }
+.sheet-inventory-list > button:hover { background: rgba(255,255,255,.48); }
+.sheet-inventory-list b { color: #731b1f; font-family: "Cinzel", serif; font-size: 14px; text-align: center; }
+.sheet-inventory-list strong,
+.sheet-inventory-list small { display: block; }
+.sheet-inventory-list strong { color: #241b14; font-family: var(--font-ui); font-size: 14px; line-height: 1.25; }
+.sheet-inventory-list small { margin-top: 3px; overflow: hidden; color: #665541; font-family: var(--font-ui); font-size: 11px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+.sheet-inventory-list i { color: #731b1f; font-size: 21px; font-style: normal; text-align: center; }
+.sheet-manual-label { margin: 1px 0 -2px; color: #665541; font-size: 10px; font-weight: 700; letter-spacing: .25px; text-transform: uppercase; }
 
 .condition-reference-list,
 .action-reference-list { overflow: hidden; border: 1px solid rgba(71,51,27,.28); }
@@ -2326,6 +2393,76 @@ body.dialog-open { overflow: hidden; }
 .detail-facts dd { margin: 4px 0 0; color: var(--blood-dark); font-size: 14px; font-weight: 700; }
 .book-rule-block p { white-space: pre-line; }
 .compact-rule-block { margin-top: 10px; }
+.book-rule-block > span i {
+  float: right;
+  color: var(--ink-soft);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-style: normal;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.rule-detail-back {
+  min-height: 42px;
+  margin: 0 0 11px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--blood-dark);
+  border: 1px solid rgba(92, 22, 25, .42);
+  background: rgba(255, 255, 255, .26);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 800;
+}
+.rule-detail-back:focus-visible,
+.trait-link-block button:focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
+.trait-link-block {
+  margin-top: 10px;
+  padding: 14px 15px 15px;
+  border: 1px solid rgba(71, 51, 27, .4);
+  border-left: 5px solid var(--blood);
+  background: rgba(255, 255, 255, .28);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.24);
+}
+.trait-link-block > span {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--blood);
+  font-family: "Cinzel", serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+.trait-link-block > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.trait-link-block button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px 8px 12px;
+  cursor: pointer;
+  color: #f2e8ce;
+  border: 1px solid #6d1b20;
+  background: linear-gradient(145deg, #6d1b20, #3c0d10);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: left;
+  box-shadow: inset 0 0 0 1px rgba(214, 180, 102, .18);
+}
+.trait-link-block button i {
+  color: #d7bd78;
+  font-size: 19px;
+  font-style: normal;
+  line-height: 1;
+}
 
 @media (max-width: 900px) {
   body { color: #272117; background: #181614; }
@@ -2626,6 +2763,9 @@ body.dialog-open { overflow: hidden; }
   .detail-facts dt { font-size: 10px; }
   .detail-facts dd { font-size: 14px; }
   .rule-detail-dialog .book-rule-block p { font-size: 15px; line-height: 1.62; }
+  .trait-link-block { padding: 12px; }
+  .trait-link-block > div { display: grid; grid-template-columns: 1fr; }
+  .trait-link-block button { width: 100%; min-height: 48px; font-size: 14px; }
 }
 
 @media (max-width: 370px) {

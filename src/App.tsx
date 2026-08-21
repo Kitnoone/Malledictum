@@ -20,6 +20,12 @@ import {
 } from "./data/rules";
 import { SKILL_RULE_TEXT, type SkillRuleText } from "./data/skillRules";
 import { TALENT_RULE_TEXT } from "./data/talentRules";
+import {
+  getCatalogRule,
+  resolveTraitRule,
+  splitTraitLabels,
+  type BookRuleSection,
+} from "./data/equipmentRules";
 
 type TabId = "sheet" | "advance" | "inventory" | "reference";
 type SheetPageId = "dossier" | "combat";
@@ -35,6 +41,7 @@ type Purchase = {
 };
 
 type InventoryEntry = { itemId: string; quantity: number };
+type InventoryEntryWithItem = InventoryEntry & { item: CatalogItem };
 type CharacteristicState = Record<CharacteristicId, { starting: number; advances: number }>;
 
 type OwnedSpecialization = {
@@ -73,7 +80,8 @@ type RuleDetail = {
   page: number;
   description?: string;
   facts?: Array<{ label: string; value: string }>;
-  traits?: string;
+  sections?: BookRuleSection[];
+  traitLinks?: string[];
 };
 
 type AppState = {
@@ -290,12 +298,51 @@ function MobileSheetSection({
   );
 }
 
+function LinkedInventoryList({
+  entries,
+  onOpen,
+}: {
+  entries: InventoryEntryWithItem[];
+  onOpen: (item: CatalogItem) => void;
+}) {
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="sheet-inventory-list">
+      {entries.map((entry) => {
+        const stats = Object.entries(entry.item.stats)
+          .map(([label, value]) => `${label}: ${value}`)
+          .join(" · ");
+        return (
+          <button type="button" key={entry.itemId} onClick={() => onOpen(entry.item)}>
+            <b>{entry.quantity}×</b>
+            <span><strong>{entry.item.name}</strong><small>{stats || entry.item.category}</small></span>
+            <i aria-hidden="true">›</i>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function normalizeRows<T extends Record<string, string>>(value: unknown, count: number, factory: () => T): T[] {
   const source = Array.isArray(value) ? value : [];
   return Array.from({ length: count }, (_, index) => ({ ...factory(), ...(source[index] ?? {}) }));
 }
 
-function RuleDetailDialog({ detail, onClose }: { detail: RuleDetail; onClose: () => void }) {
+function RuleDetailDialog({
+  detail,
+  canGoBack,
+  onBack,
+  onClose,
+  onOpenTrait,
+}: {
+  detail: RuleDetail;
+  canGoBack: boolean;
+  onBack: () => void;
+  onClose: () => void;
+  onOpenTrait: (label: string) => void;
+}) {
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -317,13 +364,25 @@ function RuleDetailDialog({ detail, onClose }: { detail: RuleDetail; onClose: ()
           <button className="skill-dialog-close" type="button" onClick={onClose} autoFocus aria-label="Закрыть окно">×</button>
         </header>
         <div className="skill-dialog-scroll">
+          {canGoBack && <button className="rule-detail-back" type="button" onClick={onBack}>← Назад к предмету</button>}
           {detail.facts && detail.facts.length > 0 && (
             <dl className="detail-facts">
               {detail.facts.map((fact) => <div key={`${fact.label}-${fact.value}`}><dt>{fact.label}</dt><dd>{fact.value || "—"}</dd></div>)}
             </dl>
           )}
           {detail.description && <section className="book-rule-block"><span>Текст книги</span><p>{detail.description}</p></section>}
-          {detail.traits && <section className="book-rule-block compact-rule-block"><span>Свойства</span><p>{detail.traits}</p></section>}
+          {detail.sections?.map((section) => (
+            <section className="book-rule-block compact-rule-block" key={`${section.label}-${section.page}`}>
+              <span>{section.label}<i>стр. {section.page}</i></span>
+              <p>{section.text}</p>
+            </section>
+          ))}
+          {detail.traitLinks && detail.traitLinks.length > 0 && (
+            <section className="trait-link-block">
+              <span>Свойства</span>
+              <div>{detail.traitLinks.map((trait) => <button type="button" key={trait} onClick={() => onOpenTrait(trait)}>{trait}<i aria-hidden="true">›</i></button>)}</div>
+            </section>
+          )}
         </div>
       </section>
     </div>
@@ -438,7 +497,7 @@ export default function Home() {
   const [catalogKind, setCatalogKind] = useState<CatalogKind | "all">("all");
   const [creationMode, setCreationMode] = useState(false);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
-  const [ruleDetail, setRuleDetail] = useState<RuleDetail | null>(null);
+  const [ruleDetailStack, setRuleDetailStack] = useState<RuleDetail[]>([]);
 
   useEffect(() => {
     try {
@@ -503,7 +562,10 @@ export default function Home() {
   const availableXp = state.totalXp - spentXp;
 
   const inventoryWithItems = useMemo(() => state.inventory.map((entry) => ({ ...entry, item: CATALOG.find((item) => item.id === entry.itemId) }))
-    .filter((entry): entry is InventoryEntry & { item: CatalogItem } => Boolean(entry.item)), [state.inventory]);
+    .filter((entry): entry is InventoryEntryWithItem => Boolean(entry.item)), [state.inventory]);
+  const inventoryWeapons = useMemo(() => inventoryWithItems.filter((entry) => ["melee", "ranged", "explosive"].includes(entry.item.kind)), [inventoryWithItems]);
+  const inventoryArmor = useMemo(() => inventoryWithItems.filter((entry) => entry.item.kind === "armor"), [inventoryWithItems]);
+  const inventoryEquipment = useMemo(() => inventoryWithItems.filter((entry) => !["melee", "ranged", "explosive", "armor"].includes(entry.item.kind)), [inventoryWithItems]);
   const carriedWeight = inventoryWithItems.reduce((sum, entry) => sum + (entry.item.weightValue * entry.quantity), 0);
   const ownedTalents = state.talents.map((id) => TALENTS.find((talent) => talent.id === id)).filter((talent): talent is Talent => Boolean(talent));
 
@@ -671,7 +733,13 @@ export default function Home() {
     })
     : [];
 
-  const openTalentDetail = (talentEntry: Talent) => setRuleDetail({
+  const ruleDetail = ruleDetailStack[ruleDetailStack.length - 1] ?? null;
+  const showRuleDetail = (detail: RuleDetail) => setRuleDetailStack([detail]);
+  const showNestedRuleDetail = (detail: RuleDetail) => setRuleDetailStack((current) => [...current, detail]);
+  const closeRuleDetail = () => setRuleDetailStack([]);
+  const returnToParentRuleDetail = () => setRuleDetailStack((current) => current.slice(0, -1));
+
+  const openTalentDetail = (talentEntry: Talent) => showRuleDetail({
     title: talentEntry.name,
     eyebrow: "Талант",
     page: talentEntry.page,
@@ -683,24 +751,40 @@ export default function Home() {
     ],
   });
 
-  const openItemDetail = (item: CatalogItem) => setRuleDetail({
-    title: item.name,
-    eyebrow: item.category,
-    page: item.page,
-    facts: [
-      ...Object.entries(item.stats).map(([label, value]) => ({ label, value })),
-      { label: "Вес", value: item.weight },
-      { label: "Цена", value: item.price },
-      { label: "Доступность", value: item.availability },
-    ],
-    traits: item.traits || undefined,
-  });
+  const openItemDetail = (item: CatalogItem) => {
+    const rule = getCatalogRule(item);
+    showRuleDetail({
+      title: item.name,
+      eyebrow: item.category,
+      page: item.page,
+      facts: [
+        ...Object.entries(item.stats).map(([label, value]) => ({ label, value })),
+        { label: "Вес", value: item.weight },
+        { label: "Цена", value: item.price },
+        { label: "Доступность", value: item.availability },
+      ],
+      sections: rule ? [rule] : undefined,
+      traitLinks: splitTraitLabels(item.traits),
+    });
+  };
+
+  const openTraitDetail = (label: string) => {
+    const trait = resolveTraitRule(label);
+    if (!trait) return;
+    showNestedRuleDetail({
+      title: trait.title,
+      eyebrow: "Свойство",
+      page: trait.page,
+      facts: trait.facts,
+      sections: trait.sections,
+    });
+  };
 
   const openSpecializationDetail = (key: string) => {
     const entry = allSpecializations.find((specialization) => specialization.key === key);
     if (!entry) return;
     const text = SKILL_RULE_TEXT[entry.skill.id]?.specializations[entry.id];
-    setRuleDetail({
+    showRuleDetail({
       title: `${entry.skill.name} (${entry.name})`,
       eyebrow: "Специализация",
       page: entry.skill.page,
@@ -863,7 +947,9 @@ export default function Home() {
                       </div>
                     </MobileSheetSection>
 
-                    <MobileSheetSection number="03" title="Оружие" defaultOpen>
+                    <MobileSheetSection number="03" title={`Оружие · ${inventoryWeapons.reduce((sum, entry) => sum + entry.quantity, 0)}`} defaultOpen>
+                      <LinkedInventoryList entries={inventoryWeapons} onOpen={openItemDetail} />
+                      {inventoryWeapons.length > 0 && <p className="sheet-manual-label">Дополнительные строки</p>}
                       <div className="mobile-record-list">
                         {state.weaponEntries.map((entry, index) => (
                           <details className="mobile-record" key={index}>
@@ -883,7 +969,9 @@ export default function Home() {
                       </div>
                     </MobileSheetSection>
 
-                    <MobileSheetSection number="04" title="Броня">
+                    <MobileSheetSection number="04" title={`Броня · ${inventoryArmor.reduce((sum, entry) => sum + entry.quantity, 0)}`} defaultOpen={inventoryArmor.length > 0}>
+                      <LinkedInventoryList entries={inventoryArmor} onOpen={openItemDetail} />
+                      {inventoryArmor.length > 0 && <p className="sheet-manual-label">Дополнительные строки</p>}
                       <div className="mobile-record-list">
                         {state.armorEntries.map((entry, index) => (
                           <details className="mobile-record" key={index}>
@@ -902,7 +990,10 @@ export default function Home() {
                     </MobileSheetSection>
 
                     <MobileSheetSection number="05" title="Боевые заметки"><TextAreaField label="Боевые заметки" value={state.combatNotes} onChange={(value) => setTextState("combatNotes", value)} /></MobileSheetSection>
-                    <MobileSheetSection number="06" title="Снаряжение"><TextAreaField label="Снаряжение" value={state.equipmentNotes} onChange={(value) => setTextState("equipmentNotes", value)} /></MobileSheetSection>
+                    <MobileSheetSection number="06" title={`Снаряжение · ${inventoryEquipment.reduce((sum, entry) => sum + entry.quantity, 0)}`} defaultOpen={inventoryEquipment.length > 0}>
+                      <LinkedInventoryList entries={inventoryEquipment} onOpen={openItemDetail} />
+                      <TextAreaField label="Дополнительные записи" value={state.equipmentNotes} onChange={(value) => setTextState("equipmentNotes", value)} />
+                    </MobileSheetSection>
                     <MobileSheetSection number="07" title="Вес">
                       <div className="mobile-value-pair"><label><span>Текущий</span><strong className={carriedWeight > carryCapacity ? "danger-text" : ""}>{carriedWeight}</strong></label><label><span>Максимальный</span><strong>{carryCapacity}</strong></label></div>
                     </MobileSheetSection>
@@ -1042,7 +1133,7 @@ export default function Home() {
                 <header className="chapter-heading"><div><p>III · Арсенал</p><h2>Инвентарь</h2></div></header>
                 <section className="inventory-summary dark-panel"><div><small>Предметы</small><strong>{state.inventory.reduce((sum, entry) => sum + entry.quantity, 0)}</strong></div><div><small>Вес</small><strong className={carriedWeight > carryCapacity ? "danger-text" : ""}>{carriedWeight} / {carryCapacity}</strong></div><div><small>Состояние</small><strong>{carriedWeight > immobilizedWeightThreshold ? "Обездвижен" : carriedWeight > carryCapacity ? "Перегрузка" : "Норма"}</strong></div></section>
 
-                <article className="ruled-panel manifest-panel"><div className="panel-heading"><div><h3>У персонажа</h3></div></div>{inventoryWithItems.length === 0 ? <p className="empty-note">Инвентарь пуст.</p> : inventoryWithItems.map((entry) => <div className="manifest-row interactive" key={entry.itemId}><button className="manifest-item-button" type="button" onClick={() => openItemDetail(entry.item)}><span><strong>{entry.item.name}</strong><small>{entry.item.category}</small></span><i>›</i></button><span>{entry.quantity}</span><button type="button" onClick={() => changeInventoryQuantity(entry.itemId, -1)}>−</button><button type="button" onClick={() => changeInventoryQuantity(entry.itemId, 1)}>+</button></div>)}</article>
+                <article className="ruled-panel manifest-panel"><div className="panel-heading"><div><h3>У персонажа</h3></div><button className="text-button" type="button" onClick={() => { setSheetPage("combat"); openTab("sheet"); }}>Открыть в листе</button></div>{inventoryWithItems.length === 0 ? <p className="empty-note">Инвентарь пуст.</p> : inventoryWithItems.map((entry) => <div className="manifest-row interactive" key={entry.itemId}><button className="manifest-item-button" type="button" onClick={() => openItemDetail(entry.item)}><span><strong>{entry.item.name}</strong><small>{entry.item.category}</small></span><i>›</i></button><span>{entry.quantity}</span><button type="button" onClick={() => changeInventoryQuantity(entry.itemId, -1)}>−</button><button type="button" onClick={() => changeInventoryQuantity(entry.itemId, 1)}>+</button></div>)}</article>
 
                 <div className="catalog-toolbar"><input type="search" value={catalogQuery} onChange={(event) => setCatalogQuery(event.target.value)} placeholder="Поиск по названию, свойству или специализации…" /><div className="filter-chips">{(Object.keys(kindLabels) as Array<CatalogKind | "all">).map((kind) => <button type="button" key={kind} className={catalogKind === kind ? "active" : ""} onClick={() => setCatalogKind(kind)}>{kindLabels[kind]}</button>)}</div></div>
                 <div className="item-catalog-list">{filteredCatalog.map((item) => <div className="catalog-list-row" key={item.id}><button className="catalog-list-copy" type="button" onClick={() => openItemDetail(item)}><span><small>{item.category}</small><strong>{item.name}</strong></span><i>›</i></button><button className="catalog-add-button" type="button" onClick={() => addInventoryItem(item.id)} aria-label={`Добавить ${item.name}`}>+</button></div>)}</div>
@@ -1052,9 +1143,9 @@ export default function Home() {
             {activeTab === "reference" && (
               <div className="chapter-page reference-page rules-database-page">
                 <header className="chapter-heading"><div><p>IV · Ширма</p><h2>Подсказки</h2></div></header>
-                <article className="ruled-panel condition-reference"><div className="panel-heading"><div><h3>Состояния</h3></div></div><div className="condition-reference-list">{[...conditionReference].sort((a, b) => Number(state.activeConditions.includes(b[0])) - Number(state.activeConditions.includes(a[0]))).map(([name, effect, page]) => { const active = state.activeConditions.includes(name); return <div className={active ? "condition-list-row active" : "condition-list-row"} key={name}><button type="button" className="condition-copy" onClick={() => setRuleDetail({ title: String(name), eyebrow: "Состояние", page: Number(page), description: String(effect) })}><span><strong>{name}</strong>{active && <small>Активно</small>}</span><i>›</i></button><button type="button" className="condition-toggle" aria-pressed={active} onClick={() => toggleCondition(String(name))}>{active ? "✓" : "+"}</button></div>; })}</div></article>
-                <article className="ruled-panel actions-reference"><div className="panel-heading"><div><h3>Действия</h3></div></div><div className="action-reference-list">{actionReference.map(([name, kind, detail, page], index) => <button className="action-list-row" type="button" key={name} onClick={() => setRuleDetail({ title: String(name), eyebrow: String(kind), page: Number(page), description: String(detail) })}><span className="action-number">{String(index + 1).padStart(2, "0")}</span><span><small>{kind}</small><strong>{name}</strong></span><i>›</i></button>)}</div></article>
-                <button className="turn-order-card" type="button" onClick={() => setRuleDetail({ title: "Порядок хода", eyebrow: "Бой", page: 199, description: "В свой ход вы можете совершить движение и предпринять действие. Разные мелочи не требуют тратить на них действие – например, открыть дверь, сделать несколько шагов в пределах своей зоны, выхватить оружие. Ведущий определяет, потребует заявленное вами обычного или свободного действия. Общее правило – если вам нужно бросать проверку, значит на это нужно потратить обычное действие. Реакцию вы применяете в чужой ход. Если правила, таланты или снаряжение не указывают обратного, вы можете применять только одну реакцию до начала своего следующего хода." })}><span><small>Бой</small><strong>Порядок хода</strong></span><i>›</i></button>
+                <article className="ruled-panel condition-reference"><div className="panel-heading"><div><h3>Состояния</h3></div></div><div className="condition-reference-list">{[...conditionReference].sort((a, b) => Number(state.activeConditions.includes(b[0])) - Number(state.activeConditions.includes(a[0]))).map(([name, effect, page]) => { const active = state.activeConditions.includes(name); return <div className={active ? "condition-list-row active" : "condition-list-row"} key={name}><button type="button" className="condition-copy" onClick={() => showRuleDetail({ title: String(name), eyebrow: "Состояние", page: Number(page), description: String(effect) })}><span><strong>{name}</strong>{active && <small>Активно</small>}</span><i>›</i></button><button type="button" className="condition-toggle" aria-pressed={active} onClick={() => toggleCondition(String(name))}>{active ? "✓" : "+"}</button></div>; })}</div></article>
+                <article className="ruled-panel actions-reference"><div className="panel-heading"><div><h3>Действия</h3></div></div><div className="action-reference-list">{actionReference.map(([name, kind, detail, page], index) => <button className="action-list-row" type="button" key={name} onClick={() => showRuleDetail({ title: String(name), eyebrow: String(kind), page: Number(page), description: String(detail) })}><span className="action-number">{String(index + 1).padStart(2, "0")}</span><span><small>{kind}</small><strong>{name}</strong></span><i>›</i></button>)}</div></article>
+                <button className="turn-order-card" type="button" onClick={() => showRuleDetail({ title: "Порядок хода", eyebrow: "Бой", page: 199, description: "В свой ход вы можете совершить движение и предпринять действие. Разные мелочи не требуют тратить на них действие – например, открыть дверь, сделать несколько шагов в пределах своей зоны, выхватить оружие. Ведущий определяет, потребует заявленное вами обычного или свободного действия. Общее правило – если вам нужно бросать проверку, значит на это нужно потратить обычное действие. Реакцию вы применяете в чужой ход. Если правила, таланты или снаряжение не указывают обратного, вы можете применять только одну реакцию до начала своего следующего хода." })}><span><small>Бой</small><strong>Порядок хода</strong></span><i>›</i></button>
               </div>
             )}
           </div>
@@ -1073,7 +1164,15 @@ export default function Home() {
           onClose={() => setSelectedSkillId(null)}
         />
       )}
-      {ruleDetail && <RuleDetailDialog detail={ruleDetail} onClose={() => setRuleDetail(null)} />}
+      {ruleDetail && (
+        <RuleDetailDialog
+          detail={ruleDetail}
+          canGoBack={ruleDetailStack.length > 1}
+          onBack={returnToParentRuleDetail}
+          onClose={closeRuleDetail}
+          onOpenTrait={openTraitDetail}
+        />
+      )}
     </main>
   );
 }
