@@ -1,4 +1,4 @@
-import { cpSync, existsSync } from "node:fs";
+import { cpSync, existsSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -23,5 +23,6 @@ for (const entry of publishedEntries) {
   const destination = join(projectRoot, entry);
 
   if (!existsSync(source)) continue;
+  rmSync(destination, { force: true, recursive: true });
   cpSync(source, destination, { force: true, recursive: true });
 }
