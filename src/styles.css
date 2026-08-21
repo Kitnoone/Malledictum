@@ -2899,7 +2899,8 @@ body.weapon-screen-open { overflow: hidden; }
   background: #06140e;
   box-shadow: 0 18px 44px rgba(0,0,0,.44), inset 0 0 38px rgba(25,134,72,.08);
 }
-.weapon-blueprint svg { width: 100%; display: block; aspect-ratio: 900 / 620; }
+.weapon-blueprint svg,
+.weapon-blueprint img { width: 100%; display: block; aspect-ratio: 3 / 2; object-fit: cover; background: #020c08; }
 .bp-background { fill: #06140e; }
 .bp-grid-minor { fill: none; stroke: rgba(48, 150, 89, .19); stroke-width: 1; }
 .bp-grid-major { fill: none; stroke: rgba(73, 205, 123, .14); stroke-width: 1.4; }
@@ -3303,7 +3304,8 @@ body.weapon-screen-open { overflow: hidden; }
   .weapon-screen-header { grid-template-columns: 48px minmax(0, 1fr); }
   .weapon-screen-header .source-badge { display: none; }
   .weapon-screen-scroll { padding: 10px 10px calc(30px + env(safe-area-inset-bottom)); }
-  .weapon-blueprint svg { min-height: 240px; object-fit: cover; }
+  .weapon-blueprint svg,
+  .weapon-blueprint img { min-height: 240px; object-fit: cover; }
   .weapon-blueprint figcaption { padding: 10px; }
   .weapon-blueprint figcaption strong { font-size: 12px; }
   .weapon-screen-tabs { top: -10px; margin: 9px 0; }

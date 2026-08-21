@@ -5,7 +5,16 @@ import { fileURLToPath } from "node:url";
 const scriptsDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptsDirectory, "..");
 const buildDirectory = join(projectRoot, "dist");
-const publishedEntries = ["index.html", "assets", "favicon.svg", "og.png", "ornate-rail.png", ".nojekyll"];
+const publishedEntries = [
+  "index.html",
+  "assets",
+  "weapon-icons",
+  "rule-pages",
+  "favicon.svg",
+  "og.png",
+  "ornate-rail.png",
+  ".nojekyll",
+];
 
 cpSync(join(buildDirectory, "index.source.html"), join(buildDirectory, "index.html"), { force: true });
 

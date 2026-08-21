@@ -1,0 +1,222 @@
+[
+  {
+    "id": "chain-axe",
+    "source": "generated-raster"
+  },
+  {
+    "id": "chainsword",
+    "source": "generated-raster"
+  },
+  {
+    "id": "eviscerator",
+    "source": "generated-raster"
+  },
+  {
+    "id": "force-staff",
+    "source": "generated-raster"
+  },
+  {
+    "id": "force-sword",
+    "source": "generated-raster"
+  },
+  {
+    "id": "axe",
+    "source": "generated-raster"
+  },
+  {
+    "id": "flail",
+    "source": "generated-raster"
+  },
+  {
+    "id": "great-weapon",
+    "source": "generated-raster"
+  },
+  {
+    "id": "hammer",
+    "source": "generated-raster"
+  },
+  {
+    "id": "staff",
+    "source": "generated-raster"
+  },
+  {
+    "id": "sword",
+    "source": "generated-raster"
+  },
+  {
+    "id": "unarmed",
+    "source": "generated-raster"
+  },
+  {
+    "id": "whip",
+    "source": "generated-raster"
+  },
+  {
+    "id": "electro-whip",
+    "source": "generated-raster"
+  },
+  {
+    "id": "shock-maul",
+    "source": "generated-raster"
+  },
+  {
+    "id": "power-axe",
+    "source": "generated-raster"
+  },
+  {
+    "id": "power-fist",
+    "source": "generated-raster"
+  },
+  {
+    "id": "power-knife",
+    "source": "generated-raster"
+  },
+  {
+    "id": "power-sword",
+    "source": "generated-raster"
+  },
+  {
+    "id": "knuckleduster",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "improvised-one-handed",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "improvised-two-handed",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "knife",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "power-maul",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "bolt-pistol",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "bolter",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "heavy-bolter",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "hand-flamer",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "flamer",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "laspistol",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "lasgun",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "lascarbine",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "long-las",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "hot-shot-laspistol",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "hot-shot-lasgun",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "lascannon",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "grenade-launcher",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "missile-launcher",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "inferno-pistol",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "meltagun",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "plasma-pistol",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "plasma-gun",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "autopistol",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "autogun",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "hand-cannon",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "heavy-stubber",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "combat-shotgun",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "pump-shotgun",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "sniper-rifle",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "stub-pistol",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "stub-revolver",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "needle-pistol",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "needle-rifle",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "web-pistol",
+    "source": "vector-blueprint"
+  },
+  {
+    "id": "webber",
+    "source": "vector-blueprint"
+  }
+]
