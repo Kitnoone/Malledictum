@@ -6,10 +6,12 @@ type WeaponBlueprintProps = {
 };
 
 export function WeaponBlueprint({ item, installedUpgrades = [] }: WeaponBlueprintProps) {
+  const imageExtension = item.kind === "ranged" ? "webp" : "png";
+
   return (
     <figure className="weapon-blueprint" aria-label={`Технический чертёж: ${item.name}`}>
       <img
-        src={`./weapon-icons/${item.id}.png`}
+        src={`./weapon-icons/${item.id}.${imageExtension}`}
         alt={`Чертёж оружия «${item.name}»`}
         draggable={false}
       />
