@@ -97,126 +97,126 @@
   },
   {
     "id": "bolt-pistol",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "bolter",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "heavy-bolter",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "hand-flamer",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "flamer",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "laspistol",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "lasgun",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "lascarbine",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "long-las",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "hot-shot-laspistol",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "hot-shot-lasgun",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "lascannon",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "grenade-launcher",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "missile-launcher",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "inferno-pistol",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "meltagun",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "plasma-pistol",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "plasma-gun",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "autopistol",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "autogun",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "hand-cannon",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "heavy-stubber",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "combat-shotgun",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "pump-shotgun",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "sniper-rifle",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "stub-pistol",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "stub-revolver",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "needle-pistol",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "needle-rifle",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "web-pistol",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   },
   {
     "id": "webber",
-    "source": "vector-blueprint"
+    "source": "generated-raster"
   }
 ]
