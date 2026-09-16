@@ -29,12 +29,24 @@ import {
 } from "./data/equipmentRules";
 import { ENVIRONMENT_RULES } from "./data/environmentRules";
 import { CRITICAL_INJURIES, INJURY_LOCATIONS, type CriticalInjury, type InjuryLocation } from "./data/injuryRules";
+import {
+  PSYCHIC_DISCIPLINES,
+  PSYCHIC_PHENOMENA,
+  PSYCHIC_POWERS,
+  PSYCHIC_RULES,
+  WARP_PERILS,
+  type PsychicDisciplineId,
+  type PsychicPhenomenon,
+  type PsychicPower,
+  type WarpPeril,
+} from "./data/psychicRules";
 import { WeaponBlueprint } from "./components/WeaponBlueprint";
 
 type TabId = "sheet" | "advance" | "inventory" | "reference";
 type SheetPageId = "dossier" | "combat";
 type AdvanceSectionId = "characteristics" | "skills" | "specializations" | "talents" | "journal";
-type ReferenceSectionId = "conditions" | "actions" | "environment" | "injuries";
+type ReferenceSectionId = "conditions" | "actions" | "environment" | "psychic" | "injuries";
+type PsychicReferenceMode = "rules" | "powers" | "phenomena" | "perils";
 type PurchaseKind = "talent" | "skill" | "specialization" | "characteristic";
 
 type Purchase = {
@@ -161,7 +173,15 @@ const referenceSections: { id: ReferenceSectionId; label: string }[] = [
   { id: "conditions", label: "Состояния" },
   { id: "actions", label: "Действия" },
   { id: "environment", label: "Окружение" },
+  { id: "psychic", label: "Психосилы" },
   { id: "injuries", label: "Травмы" },
+];
+
+const psychicReferenceModes: { id: PsychicReferenceMode; label: string }[] = [
+  { id: "rules", label: "Механика" },
+  { id: "powers", label: "Силы" },
+  { id: "phenomena", label: "Феномены" },
+  { id: "perils", label: "Прорывы" },
 ];
 
 const defaultCharacteristics = Object.fromEntries(
@@ -320,7 +340,7 @@ type BookPageTarget = { page: number; title?: string; texts?: string[] };
 const OPEN_BOOK_PAGE_EVENT = "imperium:open-book-page";
 
 const ruleEmphasisPattern = new RegExp(
-  "((?:(?:рутинн|средн|трудн|сложн)(?:ая|ую)|очень\\s+сложн(?:ая|ую))\\s+\\([+−-]?\\d+\\)\\s+проверк(?:а|у|и)\\s+(?:Атлетики|Бдительности|Боя|Взаимопонимания|Дисциплины|Ловкости рук|Логики|Медики|Навигации|Пилотирования|Психической мощи|Рефлексов|Скрытности|Стойкости|Стрельбы|Техники|Чутья)(?:\\s*\\([^)]*\\))?|проверк(?:а|у|и|ах|ами)\\s+(?:Атлетики|Бдительности|Боя|Взаимопонимания|Дисциплины|Ловкости рук|Логики|Медики|Навигации|Пилотирования|Психической мощи|Рефлексов|Скрытности|Стойкости|Стрельбы|Техники|Чутья)(?:\\s*\\([^)]*\\))?|Ближний бой|Дальний бой|Сила воли|Товарищество|Выносливость|Восприятие|Интеллект|Ловкость|Сила|Увечье:)",
+  "((?:(?:лёгк|рутинн|средн|трудн|сложн)(?:ая|ую)|очень\\s+сложн(?:ая|ую))\\s+\\([+−-]?\\d+\\)\\s+проверк(?:а|у|и)\\s+(?:Атлетики|Бдительности|Боя|Взаимопонимания|Дисциплины|Ловкости рук|Логики|Медики|Навигации|Пилотирования|Психического мастерства|Психической мощи|Рефлексов|Скрытности|Стойкости|Стрельбы|Техники|Чутья)(?:\\s*\\([^)]*\\))?|проверк(?:а|у|и|ах|ами)\\s+(?:Атлетики|Бдительности|Боя|Взаимопонимания|Дисциплины|Ловкости рук|Логики|Медики|Навигации|Пилотирования|Психического мастерства|Психической мощи|Рефлексов|Скрытности|Стойкости|Стрельбы|Техники|Чутья)(?:\\s*\\([^)]*\\))?|Ближний бой|Дальний бой|Сила воли|Силы воли|Товарищество|Выносливость|Восприятие|Интеллект|Ловкость|Сила|Увечье:)",
   "giu",
 );
 
@@ -799,6 +819,9 @@ export default function Home() {
   const [sheetPage, setSheetPage] = useState<SheetPageId>("dossier");
   const [advanceSection, setAdvanceSection] = useState<AdvanceSectionId>("characteristics");
   const [referenceSection, setReferenceSection] = useState<ReferenceSectionId>("conditions");
+  const [psychicReferenceMode, setPsychicReferenceMode] = useState<PsychicReferenceMode>("rules");
+  const [psychicDiscipline, setPsychicDiscipline] = useState<PsychicDisciplineId | "all">("all");
+  const [psychicQuery, setPsychicQuery] = useState("");
   const [state, setState] = useState<AppState>(defaultState);
   const [hydrated, setHydrated] = useState(false);
   const [talentQuery, setTalentQuery] = useState("");
@@ -863,6 +886,10 @@ export default function Home() {
       const fallbackTexts = [
         ...ENVIRONMENT_RULES.filter((entry) => entry.page === detail.page).map((entry) => `${entry.title}\n\n${entry.text}`),
         ...CRITICAL_INJURIES.filter((entry) => entry.page === detail.page).map((entry) => `${entry.location} · ${entry.roll} · ${entry.name}\n\n${entry.effect}\n\nЛечение: ${entry.treatment}`),
+        ...PSYCHIC_RULES.filter((entry) => entry.page === detail.page).map((entry) => `${entry.title}\n\n${entry.text}`),
+        ...PSYCHIC_POWERS.filter((entry) => entry.page === detail.page).map((entry) => `${entry.name}${entry.obvious ? "*" : ""}\n\nВарп-уровень: ${entry.warpRating}\nПроверка: ${entry.test}\nДальность: ${entry.range}\nЦель: ${entry.target}\nСрок действия: ${entry.duration}\n\n${entry.effect}${entry.table ? `\n\n${entry.table.title}\n\n${entry.table.rows.map((row) => `${row.result}: ${row.effect}`).join("\n\n")}` : ""}`),
+        ...PSYCHIC_PHENOMENA.filter((entry) => entry.page === detail.page).map((entry) => `${entry.range} · ${entry.name}\n\n${entry.effect}${entry.anomaly ? `\n\nАномалия: ${entry.anomaly}` : ""}`),
+        ...WARP_PERILS.filter((entry) => entry.page === detail.page).map((entry) => `${entry.range} · ${entry.name}\n\nПорча: ${entry.corruption}\n\n${entry.effect}`),
         ...(detail.page === 137 ? [WEAPON_UPGRADE_INSTALLATION_RULE] : []),
       ];
       setBookPageTarget({ ...detail, texts: detail.texts?.length ? detail.texts : fallbackTexts });
@@ -940,6 +967,15 @@ export default function Home() {
       return matchesKind && (!query || haystack.includes(query));
     });
   }, [catalogKind, catalogQuery]);
+
+  const filteredPsychicPowers = useMemo(() => {
+    const query = psychicQuery.trim().toLocaleLowerCase("ru");
+    return PSYCHIC_POWERS.filter((entry) => {
+      const matchesDiscipline = psychicDiscipline === "all" || entry.discipline === psychicDiscipline;
+      const haystack = `${entry.name} ${entry.cognomens} ${entry.test} ${entry.range} ${entry.target} ${entry.duration} ${entry.effect}`.toLocaleLowerCase("ru");
+      return matchesDiscipline && (!query || haystack.includes(query));
+    });
+  }, [psychicDiscipline, psychicQuery]);
 
   const setIdentity = (key: keyof AppState["identity"], value: string) => setState((current) => ({ ...current, identity: { ...current.identity, [key]: value } }));
   const setTextState = (key: keyof AppState, value: string | number) => setState((current) => ({ ...current, [key]: value }));
@@ -1196,6 +1232,46 @@ export default function Home() {
       { label: "Воздействие", page: entry.page, text: entry.effect },
       { label: "Лечение", page: entry.page, text: entry.treatment },
     ],
+  });
+
+  const openPsychicPowerDetail = (entry: PsychicPower) => {
+    const discipline = PSYCHIC_DISCIPLINES.find((item) => item.id === entry.discipline);
+    showRuleDetail({
+      title: `${entry.name}${entry.obvious ? "*" : ""}`,
+      eyebrow: discipline?.name ?? "Психосила",
+      page: entry.page,
+      facts: [
+        { label: "Когномены", value: entry.cognomens },
+        { label: "Варп-уровень", value: String(entry.warpRating) },
+        { label: "Проверка", value: entry.test },
+        { label: "Дальность", value: entry.range },
+        { label: "Цель", value: entry.target },
+        { label: "Срок действия", value: entry.duration },
+        { label: "Очевидная", value: entry.obvious ? "Да" : "Нет" },
+      ],
+      description: entry.effect,
+      sections: entry.table ? [{
+        label: entry.table.title,
+        page: entry.page,
+        text: entry.table.rows.map((row) => `${row.result}: ${row.effect}`).join("\n\n"),
+      }] : undefined,
+    });
+  };
+
+  const openPsychicPhenomenonDetail = (entry: PsychicPhenomenon) => showRuleDetail({
+    title: entry.name,
+    eyebrow: `Психический феномен · ${entry.range}`,
+    page: entry.page,
+    description: entry.effect,
+    sections: entry.anomaly ? [{ label: "Аномалия", page: entry.page, text: entry.anomaly }] : undefined,
+  });
+
+  const openWarpPerilDetail = (entry: WarpPeril) => showRuleDetail({
+    title: entry.name,
+    eyebrow: `Прорыв Варпа · ${entry.range}`,
+    page: entry.page,
+    facts: [{ label: "Порча", value: String(entry.corruption) }],
+    description: entry.effect,
   });
 
   return (
@@ -1584,6 +1660,68 @@ export default function Home() {
                     <div className="environment-reference-list">
                       {ENVIRONMENT_RULES.map((entry, index) => <button type="button" key={entry.id} onClick={() => showRuleDetail({ title: entry.title, eyebrow: entry.group, page: entry.page, description: entry.text })}><span className="action-number">{String(index + 1).padStart(2, "0")}</span><span><small>{entry.group} · стр. {entry.page}</small><strong>{entry.title}</strong></span><i>›</i></button>)}
                     </div>
+                  </article>
+                )}
+
+                {referenceSection === "psychic" && (
+                  <article className="ruled-panel psychic-reference">
+                    <div className="panel-heading"><div><span>{PSYCHIC_POWERS.length} психосила · стр. 158–184</span><h3>Психосилы и Варп</h3></div></div>
+
+                    <section className={hasTalent("psyker") && state.warpCharge > warpThreshold ? "psychic-warp-meter danger" : "psychic-warp-meter"}>
+                      <div><small>Варп-заряд</small><strong>{state.warpCharge}</strong></div>
+                      <div><small>Порог</small><strong>{hasTalent("psyker") ? warpThreshold : "—"}</strong></div>
+                      <p>{hasTalent("psyker") ? (state.warpCharge > warpThreshold ? "Порог превышен: в конце хода требуется проверка прорыва Варпа." : `До превышения порога: ${Math.max(0, warpThreshold - state.warpCharge)}.`) : "Порог рассчитывается после приобретения таланта «Псайкер»."}</p>
+                      <div className="psychic-charge-controls"><button type="button" disabled={state.warpCharge <= 0} onClick={() => setTextState("warpCharge", Math.max(0, state.warpCharge - 1))}>−</button><button type="button" onClick={() => setTextState("warpCharge", state.warpCharge + 1)}>+</button></div>
+                      <SourceBadge page={163} title="Варп-заряд и порог" text={PSYCHIC_RULES.find((entry) => entry.id === "warp-charge")?.text} />
+                    </section>
+
+                    <nav className="psychic-mode-tabs" aria-label="Разделы психосил">
+                      {psychicReferenceModes.map((mode) => <button type="button" key={mode.id} className={psychicReferenceMode === mode.id ? "active" : ""} onClick={() => setPsychicReferenceMode(mode.id)}>{mode.label}</button>)}
+                    </nav>
+
+                    {psychicReferenceMode === "rules" && (
+                      <div className="psychic-rules-view">
+                        <div className="psychic-discipline-cards">
+                          {PSYCHIC_DISCIPLINES.map((discipline) => <button type="button" key={discipline.id} onClick={() => showRuleDetail({ title: discipline.name, eyebrow: "Психическая дисциплина", page: discipline.page, description: discipline.description })}><span>{PSYCHIC_POWERS.filter((entry) => entry.discipline === discipline.id).length}</span><strong>{discipline.name}</strong><i>›</i></button>)}
+                        </div>
+                        <div className="psychic-rule-list">
+                          {PSYCHIC_RULES.map((entry, index) => <button type="button" key={entry.id} onClick={() => showRuleDetail({ title: entry.title, eyebrow: "Механика психосил", page: entry.page, description: entry.text })}><span className="action-number">{String(index + 1).padStart(2, "0")}</span><span><small>Книга · стр. {entry.page}</small><strong>{entry.title}</strong></span><i>›</i></button>)}
+                        </div>
+                      </div>
+                    )}
+
+                    {psychicReferenceMode === "powers" && (
+                      <div className="psychic-powers-view">
+                        <div className="psychic-power-toolbar">
+                          <input type="search" value={psychicQuery} onChange={(event) => setPsychicQuery(event.target.value)} placeholder="Поиск по названию, эффекту или когномену…" />
+                          <div>
+                            <button type="button" className={psychicDiscipline === "all" ? "active" : ""} onClick={() => setPsychicDiscipline("all")}>Все</button>
+                            {PSYCHIC_DISCIPLINES.map((discipline) => <button type="button" key={discipline.id} className={psychicDiscipline === discipline.id ? "active" : ""} onClick={() => setPsychicDiscipline(discipline.id)}>{discipline.name.replace("Малые психосилы", "Малые")}</button>)}
+                          </div>
+                        </div>
+                        <div className="psychic-power-list">
+                          {filteredPsychicPowers.map((entry) => {
+                            const discipline = PSYCHIC_DISCIPLINES.find((item) => item.id === entry.discipline);
+                            return <button type="button" key={entry.id} onClick={() => openPsychicPowerDetail(entry)}><b title="Варп-уровень">{entry.warpRating}</b><span><small>{discipline?.name} · стр. {entry.page}</small><strong>{entry.name}{entry.obvious ? "*" : ""}</strong><em>{entry.test} · {entry.duration}</em></span><i>›</i></button>;
+                          })}
+                          {filteredPsychicPowers.length === 0 && <p className="empty-note">Психосилы по этому запросу не найдены.</p>}
+                        </div>
+                      </div>
+                    )}
+
+                    {psychicReferenceMode === "phenomena" && (
+                      <div className="psychic-table-list">
+                        <div className="psychic-table-note"><span>К100</span><p>После успешного очищения прибавьте <strong>+10 за каждый снятый варп-заряд</strong>.</p><SourceBadge page={164} title="Психические феномены" text={PSYCHIC_PHENOMENA.map((entry) => `${entry.range} · ${entry.name}: ${entry.effect}${entry.anomaly ? ` Аномалия: ${entry.anomaly}` : ""}`)} /></div>
+                        {PSYCHIC_PHENOMENA.map((entry) => <button type="button" key={entry.range} onClick={() => openPsychicPhenomenonDetail(entry)}><b>{entry.range}</b><span><strong>{entry.name}</strong><small>{entry.anomaly ? "Есть долговременная аномалия" : "Особый результат"}</small></span><i>›</i></button>)}
+                      </div>
+                    )}
+
+                    {psychicReferenceMode === "perils" && (
+                      <div className="psychic-table-list perils-list">
+                        <div className="psychic-table-note"><span>К100</span><p>Прибавьте <strong>+10 за каждый варп-заряд сверх порога</strong>. После прорыва сбросьте все заряды и прекратите поддержание.</p><SourceBadge page={165} title="Прорывы Варпа" text={WARP_PERILS.map((entry) => `${entry.range} · Порча ${entry.corruption} · ${entry.name}: ${entry.effect}`)} /></div>
+                        {WARP_PERILS.map((entry) => <button type="button" key={entry.range} onClick={() => openWarpPerilDetail(entry)}><b>{entry.range}</b><span><strong>{entry.name}</strong><small>Порча: {entry.corruption}</small></span><i>›</i></button>)}
+                      </div>
+                    )}
                   </article>
                 )}
 

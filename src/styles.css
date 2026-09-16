@@ -1,5 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cinzel+Decorative:wght@700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap");
-@import "tailwindcss";
 
 :root {
   --void: #111110;
@@ -3225,6 +3224,111 @@ body.weapon-screen-open { overflow: hidden; }
 .injury-reference-groups button small { margin-top: 2px; color: #2d7548; font-size: 9px; font-weight: 900; text-transform: uppercase; }
 .injury-reference-groups button i { color: var(--blood); font-size: 18px; font-style: normal; }
 
+/* Psychic reference */
+.psychic-reference { padding: 11px; }
+.psychic-warp-meter {
+  display: grid;
+  grid-template-columns: 86px 76px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 9px;
+  padding: 10px;
+  color: #e9e1c7;
+  border: 1px solid #84703d;
+  background: linear-gradient(135deg, #111a18, #18251f 55%, #2b1214);
+  box-shadow: inset 0 0 26px rgba(49,157,102,.09);
+}
+.psychic-warp-meter.danger { border-color: #bd4949; background: linear-gradient(135deg, #1b1112, #3d1115); box-shadow: inset 0 0 28px rgba(219,44,55,.16); }
+.psychic-warp-meter > div:not(.psychic-charge-controls) small,
+.psychic-warp-meter > div:not(.psychic-charge-controls) strong { display: block; }
+.psychic-warp-meter > div:not(.psychic-charge-controls) small { color: #a9bba5; font-size: 9px; font-weight: 900; letter-spacing: .7px; text-transform: uppercase; }
+.psychic-warp-meter > div:not(.psychic-charge-controls) strong { margin-top: 2px; color: #e7d490; font-family: "Cinzel", serif; font-size: 23px; line-height: 1; }
+.psychic-warp-meter > p { margin: 0; color: #d5d1bd; font-size: 13px; line-height: 1.35; }
+.psychic-warp-meter.danger > p { color: #ffd6cf; font-weight: 800; }
+.psychic-charge-controls { display: grid; grid-template-columns: repeat(2, 42px); gap: 5px; }
+.psychic-charge-controls button { min-height: 42px; cursor: pointer; color: #eadcae; border: 1px solid #887344; background: rgba(0,0,0,.22); font-size: 20px; font-weight: 900; }
+.psychic-charge-controls button:disabled { opacity: .35; cursor: default; }
+.psychic-warp-meter .source-badge { min-height: 42px; color: #e5d7ac; border-color: #887344; background: rgba(0,0,0,.24); }
+.psychic-mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0 0 9px;
+  padding: 4px;
+  border: 1px solid rgba(73,52,28,.3);
+  background: rgba(255,255,255,.16);
+}
+.psychic-mode-tabs button { min-height: 42px; cursor: pointer; color: var(--blood-dark); border: 1px solid rgba(101,25,28,.2); background: rgba(255,255,255,.22); font-size: 12px; font-weight: 900; }
+.psychic-mode-tabs button.active { color: #f1e5c8; border-color: #3d090c; background: var(--blood); }
+.psychic-discipline-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; }
+.psychic-discipline-cards > button {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  cursor: pointer;
+  color: inherit;
+  border: 1px solid rgba(32,91,64,.35);
+  background: linear-gradient(135deg, rgba(23,67,48,.11), rgba(255,255,255,.2));
+  text-align: left;
+}
+.psychic-discipline-cards span { color: #27704c; font-family: "Cinzel", serif; font-size: 15px; font-weight: 900; text-align: center; }
+.psychic-discipline-cards strong { color: var(--blood-dark); font-family: "Cinzel", serif; font-size: 12px; text-transform: uppercase; }
+.psychic-discipline-cards i { color: var(--blood); font-size: 18px; font-style: normal; }
+.psychic-rule-list,
+.psychic-power-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+.psychic-rule-list > button,
+.psychic-power-list > button,
+.psychic-table-list > button {
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  cursor: pointer;
+  color: inherit;
+  border: 1px solid rgba(73,52,28,.24);
+  background: rgba(255,255,255,.18);
+  text-align: left;
+}
+.psychic-rule-list > button:hover,
+.psychic-power-list > button:hover,
+.psychic-table-list > button:hover { background: rgba(255,255,255,.42); }
+.psychic-rule-list button small,
+.psychic-rule-list button strong,
+.psychic-power-list button small,
+.psychic-power-list button strong,
+.psychic-power-list button em,
+.psychic-table-list button small,
+.psychic-table-list button strong { display: block; }
+.psychic-rule-list button small,
+.psychic-power-list button small,
+.psychic-table-list button small { color: var(--ink-soft); font-size: 10px; }
+.psychic-rule-list button strong,
+.psychic-power-list button strong,
+.psychic-table-list button strong { margin-top: 2px; color: var(--blood-dark); font-size: 13px; }
+.psychic-rule-list button i,
+.psychic-power-list button i,
+.psychic-table-list button i { color: var(--blood); font-size: 19px; font-style: normal; }
+.psychic-power-list > button > b { width: 38px; height: 38px; display: grid; place-items: center; color: #d9c786; border: 1px solid #567e68; border-radius: 50%; background: #14231e; font-family: "Cinzel", serif; font-size: 17px; }
+.psychic-power-list button em { margin-top: 3px; color: #2d7548; font-size: 10px; font-style: normal; font-weight: 800; }
+.psychic-power-toolbar { margin-bottom: 8px; }
+.psychic-power-toolbar > input { width: 100%; min-height: 45px; padding: 9px 12px; color: var(--ink); border: 1px solid rgba(73,52,28,.38); background: rgba(255,255,255,.38); font-size: 15px; }
+.psychic-power-toolbar > div { display: flex; gap: 5px; padding-top: 6px; overflow-x: auto; scrollbar-width: none; }
+.psychic-power-toolbar > div::-webkit-scrollbar { display: none; }
+.psychic-power-toolbar button { min-width: max-content; min-height: 38px; padding: 6px 10px; cursor: pointer; color: var(--blood-dark); border: 1px solid rgba(101,25,28,.22); background: rgba(255,255,255,.2); font-size: 11px; font-weight: 900; }
+.psychic-power-toolbar button.active { color: #f1e5c8; background: var(--blood); }
+.psychic-table-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+.psychic-table-note { grid-column: 1 / -1; display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: center; gap: 10px; margin-bottom: 3px; padding: 10px; color: #ece2c4; border: 1px solid #78683b; background: linear-gradient(135deg, #121a17, #301114); }
+.psychic-table-note > span { color: #dac67e; font-family: "Cinzel", serif; font-size: 16px; font-weight: 900; text-align: center; }
+.psychic-table-note > p { margin: 0; font-size: 13px; line-height: 1.4; }
+.psychic-table-note > p strong { color: #f3d98f; }
+.psychic-table-list > button > b { color: var(--blood); font-family: "Cinzel", serif; font-size: 13px; text-align: center; }
+.perils-list > button small { color: #8d2a2d; font-weight: 900; text-transform: uppercase; }
+
 /* Clickable book page */
 .book-page-backdrop {
   position: fixed;
@@ -3329,6 +3433,24 @@ body.weapon-screen-open { overflow: hidden; }
   .reference-section-tabs { top: calc(58px + env(safe-area-inset-top)); margin-inline: -2px; }
   .environment-reference-list { grid-template-columns: 1fr; }
   .environment-reference-list > button { min-height: 60px; }
+  .psychic-reference { padding: 8px; }
+  .psychic-warp-meter { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; }
+  .psychic-warp-meter > p { grid-column: 1 / -1; grid-row: 2; font-size: 13px; }
+  .psychic-charge-controls { grid-column: 3; grid-row: 1; }
+  .psychic-warp-meter > .source-badge { grid-column: 1 / -1; width: 100%; }
+  .psychic-mode-tabs { display: flex; overflow-x: auto; scrollbar-width: none; }
+  .psychic-mode-tabs::-webkit-scrollbar { display: none; }
+  .psychic-mode-tabs button { min-width: 108px; }
+  .psychic-discipline-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .psychic-rule-list,
+  .psychic-power-list,
+  .psychic-table-list { grid-template-columns: 1fr; }
+  .psychic-table-note { grid-template-columns: 50px minmax(0, 1fr); }
+  .psychic-table-note > .source-badge { grid-column: 1 / -1; width: 100%; }
+  .psychic-power-list > button { min-height: 70px; }
+  .psychic-power-list button strong { font-size: 14px; }
+  .psychic-power-list button small,
+  .psychic-power-list button em { font-size: 11px; }
   .injury-reference-groups > details > div { grid-template-columns: 1fr; }
   .injury-reference-groups > details > div > button:nth-child(odd) { border-right: 0; }
   .book-page-backdrop { padding: 0; }
