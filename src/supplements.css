@@ -1,0 +1,88 @@
+.chapter-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.catalog-source-filter { display: grid; gap: 5px; font-size: 12px; font-weight: 800; }
+.catalog-source-filter select, .bestiary-tools select, .bestiary-tools input { width: 100%; min-width: 0; min-height: 44px; padding: 9px; border: 1px solid #99835c; background: #f1e6ce; color: #351e19; font: inherit; }
+.catalog-result-count, .inventory-weight-note { font-size: 13px; }
+.inventory-weight-note, .bestiary-note { padding: 9px 12px; border-left: 3px solid #986b35; background: #d8c49b44; line-height: 1.55; }
+.local-book-library { margin: 0 0 16px; padding: 12px 15px; border: 1px solid #8d785250; background: #dbc79b40; }
+.local-book-library summary { cursor: pointer; color: #6b2426; font-weight: 800; }
+.local-book-library p { line-height: 1.6; font-size: 13px; }
+.local-book-library > div { display: flex; gap: 8px; flex-wrap: wrap; }
+.bestiary-tools { display: grid; grid-template-columns: 2fr 1fr 1.4fr 1fr; gap: 10px; }
+.bestiary-tools label { display: grid; gap: 6px; min-width: 0; font-size: 12px; font-weight: 800; }
+.bestiary-results { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 14px 0; flex-wrap: wrap; font-size: 13px; }
+.bestiary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.bestiary-card { min-width: 0; border: 1px solid #8e7954; border-top: 4px solid #6c2629; background: linear-gradient(145deg, #f2e8d0dd, #d5bd8e55); box-shadow: 0 2px 5px #29160c20; }
+.bestiary-card.role-champion { border-top-color: #a7792c; }
+.bestiary-card-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 8px 10px 0; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; }
+.bestiary-favorite { flex: 0 0 36px; height: 36px; border: 0; background: transparent; color: #783220; cursor: pointer; font-size: 24px; }
+.bestiary-card-open { display: block; width: 100%; text-align: left; border: 0; padding: 8px 14px 16px; color: inherit; background: transparent; cursor: pointer; }
+.bestiary-card h3 { margin: 3px 0 8px; font-family: Georgia, serif; font-size: 22px; color: #4d1c1c; }
+.bestiary-card small { font-size: 11px; }
+.bestiary-card dl { display: flex; flex-wrap: wrap; gap: 14px; margin: 16px 0; }
+.bestiary-card dl div { min-width: 50px; }
+.bestiary-card dt { font-size: 10px; text-transform: uppercase; }
+.bestiary-card dd { margin: 3px 0 0; font-weight: 800; font-size: 18px; }
+.bestiary-open-label { font-size: 12px; font-weight: 800; color: #7f2427; }
+.bestiary-card-open:focus-visible, .bestiary-favorite:focus-visible { outline: 3px solid #723134; outline-offset: -3px; }
+.bestiary-detail-backdrop, .supplement-dialog-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: #100e0dd9; }
+.supplement-dialog-backdrop { z-index: 160; }
+.bestiary-detail, .supplement-pdf-dialog { display: flex; flex-direction: column; width: min(940px, 100%); max-height: calc(100dvh - 40px); border: 1px solid #a6884b; background: #eee1c3; color: #33251c; box-shadow: 0 15px 80px #000a; }
+.bestiary-detail > header, .supplement-pdf-dialog > header { display: flex; justify-content: space-between; gap: 15px; padding: 18px 22px; color: #f2e6c5; background: #30251f; border-bottom: 4px solid #86402f; }
+.bestiary-detail h2, .supplement-pdf-dialog h2 { margin: 6px 0 0; font: bold clamp(22px, 3vw, 32px) Georgia, serif; }
+.bestiary-detail > header small, .supplement-pdf-dialog > header small { font-size: 11px; letter-spacing: 1px; }
+.bestiary-detail > header button, .supplement-pdf-dialog > header button { flex: 0 0 40px; align-self: start; min-height: 40px; font-size: 26px; color: #f2e6c5; background: #6b2c29; border: 1px solid #c8ac6f; cursor: pointer; }
+.bestiary-detail-scroll { overflow: auto; padding: 20px 22px; overscroll-behavior: contain; }
+.bestiary-original { font-size: 11px; opacity: .7; letter-spacing: 1px; }
+.bestiary-characteristics { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); border: 1px solid #9d885f; }
+.bestiary-characteristics div { text-align: center; border-right: 1px solid #b6a076; padding: 8px 1px; background: #d7c39980; }
+.bestiary-characteristics div:last-child { border: 0; }
+.bestiary-characteristics dt { font-size: 11px; font-weight: 800; }
+.bestiary-characteristics dd { margin: 6px 0 0; font-size: 23px; font-weight: 800; }
+.bestiary-combat-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; border: 1px solid #9d885f; background: #9d885f; }
+.bestiary-combat-stats div { padding: 10px; background: #e9dabb; }
+.bestiary-combat-stats dt { font-size: 11px; }
+.bestiary-combat-stats dd { margin: 5px 0 0; font-size: 18px; font-weight: 800; }
+.bestiary-rule h3 { border-bottom: 2px solid #8a4132; padding-bottom: 8px; margin-top: 24px; font: bold 23px Georgia, serif; color: #6b2829; }
+.bestiary-rule h4 { margin: 15px 0 6px; font-size: 15px; color: #502322; }
+.bestiary-rule p { white-space: pre-line; font-size: 14px; line-height: 1.7; margin: 7px 0 14px; }
+.bestiary-attack { padding: 0 12px 7px; border: 1px solid #a58e5e80; margin-bottom: 10px; }
+.bestiary-attack dl { display: flex; gap: 15px; flex-wrap: wrap; }
+.bestiary-attack dt { font-size: 10px; text-transform: uppercase; }
+.bestiary-attack dd { font-size: 13px; font-weight: 800; margin: 4px 0 0; }
+.bestiary-wound-tracker { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; padding: 14px; background: #d1b88666; border: 1px solid #9a7546; }
+.bestiary-wound-tracker label { display: flex; align-items: center; gap: 5px; font-size: 12px; }
+.bestiary-wound-tracker input { width: 65px; padding: 8px; background: #f5ecd8; border: 1px solid #ae9264; }
+.bestiary-wound-tracker button, .local-pdf-tools button { min-height: 40px; padding: 8px 12px; background: #6b2b29; border: 1px solid #a27d46; color: #f0e2bf; cursor: pointer; }
+.bestiary-wound-tracker small { width: 100%; font-size: 11px; line-height: 1.5; }
+.supplement-dialog-open, .bestiary-dialog-open { overflow: hidden; }
+.supplement-pdf-dialog { height: min(900px, calc(100dvh - 40px)); }
+.supplement-pdf-dialog iframe { flex: 1; width: 100%; min-height: 200px; border: 0; }
+.local-pdf-tools { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 20px; }
+.local-pdf-tools p { font-size: 13px; line-height: 1.5; }
+.local-pdf-tools button { flex-shrink: 0; }
+.supplement-source-excerpt { overflow: auto; padding: 0 22px 22px; font-size: 14px; line-height: 1.7; white-space: pre-line; }
+.source-status, .pdf-new-tab { padding: 0 22px 10px; font-size: 13px; }
+@media(max-width: 760px) {
+  .chapter-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .chapter-tabs button { min-width: 0; }
+  .chapter-tabs button .tab-label-mobile { font-size: 9px; }
+  .bestiary-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bestiary-tools > label:first-child { grid-column: 1 / -1; }
+  .bestiary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .bestiary-card h3 { font-size: 18px; }
+  .bestiary-card-top { font-size: 8px; }
+  .bestiary-card-open { padding: 7px 10px 12px; }
+  .bestiary-card dl { gap: 8px; }
+  .bestiary-card dt { font-size: 8px; }
+  .bestiary-card dd { font-size: 16px; }
+  .bestiary-detail-backdrop, .supplement-dialog-backdrop { padding: 0; }
+  .bestiary-detail, .supplement-pdf-dialog { max-height: 100dvh; height: 100dvh; border: 0; }
+  .bestiary-detail-scroll { padding: 14px; }
+  .bestiary-detail > header, .supplement-pdf-dialog > header { padding: 14px; }
+  .bestiary-characteristics dt { font-size: 9px; }
+  .bestiary-characteristics dd { font-size: 17px; }
+  .bestiary-combat-stats dt { font-size: 10px; }
+  .bestiary-combat-stats dd { font-size: 15px; }
+  .local-pdf-tools { flex-wrap: wrap; padding: 12px 14px; }
+}
+@media(max-width: 350px) { .bestiary-grid { grid-template-columns: 1fr; } }

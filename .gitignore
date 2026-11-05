@@ -1,2 +1,4 @@
 node_modules/
 .sites-runtime/
+tmp/
+pnpm-lock.yaml

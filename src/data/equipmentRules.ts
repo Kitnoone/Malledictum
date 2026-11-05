@@ -4,6 +4,7 @@ export type BookRuleSection = {
   label: string;
   page: number;
   text: string;
+  source?: CatalogItem['source'];
 };
 
 export type ResolvedTraitRule = {
@@ -11,6 +12,7 @@ export type ResolvedTraitRule = {
   page: number;
   facts: Array<{ label: string; value: string }>;
   sections: BookRuleSection[];
+  source?: CatalogItem['source'];
 };
 
 const categoryRules: Record<string, BookRuleSection> = {
@@ -750,7 +752,8 @@ const conditionRules: Record<string, BookRuleSection> = {
   },
 };
 
-export function getCatalogRule(item: Pick<CatalogItem, "id" | "category">): BookRuleSection | undefined {
+export function getCatalogRule(item: Pick<CatalogItem, "id" | "category"> & Partial<CatalogItem>): BookRuleSection | undefined {
+  if (item.source && item.description) return { label: "Правила предмета", page: item.page ?? 1, text: item.description, source: item.source };
   return itemRules[item.id] ?? categoryRules[item.category];
 }
 
@@ -768,7 +771,11 @@ export function resolveTraitRule(label: string): ResolvedTraitRule | null {
 
   const canonicalName = match[1].trim();
   const parameter = match[2]?.trim();
-  const baseRule = traitRules[canonicalName];
+  const supplementTraits: Record<string, BookRuleSection> = {
+    'Тайны Марса': { label: 'Свойство', source: 'mechanicus', page: 72, text: 'Персонажи вне Адептус Механикус, не имеющие Запретных знаний (Адептус Механикус), получают помеху при использовании, ремонте и модификации этого предмета.' },
+    'Прочное': { label: 'Особенность снаряжения', source: 'requisition', page: 119, text: 'Если у предмета ограничено число применений, оно удваивается. Если ограничения нет, предмет устойчив к повреждениям.' },
+  };
+  const baseRule = traitRules[canonicalName] ?? supplementTraits[canonicalName];
   if (!baseRule) return null;
 
   const facts: Array<{ label: string; value: string }> = [];
@@ -791,6 +798,7 @@ export function resolveTraitRule(label: string): ResolvedTraitRule | null {
   return {
     title: label,
     page: baseRule.page,
+    source: baseRule.source,
     facts,
     sections,
   };

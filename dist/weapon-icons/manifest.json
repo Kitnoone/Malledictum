@@ -1,0 +1,222 @@
+[
+  {
+    "id": "chain-axe",
+    "source": "generated-raster"
+  },
+  {
+    "id": "chainsword",
+    "source": "generated-raster"
+  },
+  {
+    "id": "eviscerator",
+    "source": "generated-raster"
+  },
+  {
+    "id": "force-staff",
+    "source": "generated-raster"
+  },
+  {
+    "id": "force-sword",
+    "source": "generated-raster"
+  },
+  {
+    "id": "axe",
+    "source": "generated-raster"
+  },
+  {
+    "id": "flail",
+    "source": "generated-raster"
+  },
+  {
+    "id": "great-weapon",
+    "source": "generated-raster"
+  },
+  {
+    "id": "hammer",
+    "source": "generated-raster"
+  },
+  {
+    "id": "staff",
+    "source": "generated-raster"
+  },
+  {
+    "id": "sword",
+    "source": "generated-raster"
+  },
+  {
+    "id": "unarmed",
+    "source": "generated-raster"
+  },
+  {
+    "id": "whip",
+    "source": "generated-raster"
+  },
+  {
+    "id": "electro-whip",
+    "source": "generated-raster"
+  },
+  {
+    "id": "shock-maul",
+    "source": "generated-raster"
+  },
+  {
+    "id": "power-axe",
+    "source": "generated-raster"
+  },
+  {
+    "id": "power-fist",
+    "source": "generated-raster"
+  },
+  {
+    "id": "power-knife",
+    "source": "generated-raster"
+  },
+  {
+    "id": "power-sword",
+    "source": "generated-raster"
+  },
+  {
+    "id": "knuckleduster",
+    "source": "generated-raster"
+  },
+  {
+    "id": "improvised-one-handed",
+    "source": "generated-raster"
+  },
+  {
+    "id": "improvised-two-handed",
+    "source": "generated-raster"
+  },
+  {
+    "id": "knife",
+    "source": "generated-raster"
+  },
+  {
+    "id": "power-maul",
+    "source": "generated-raster"
+  },
+  {
+    "id": "bolt-pistol",
+    "source": "generated-raster"
+  },
+  {
+    "id": "bolter",
+    "source": "generated-raster"
+  },
+  {
+    "id": "heavy-bolter",
+    "source": "generated-raster"
+  },
+  {
+    "id": "hand-flamer",
+    "source": "generated-raster"
+  },
+  {
+    "id": "flamer",
+    "source": "generated-raster"
+  },
+  {
+    "id": "laspistol",
+    "source": "generated-raster"
+  },
+  {
+    "id": "lasgun",
+    "source": "generated-raster"
+  },
+  {
+    "id": "lascarbine",
+    "source": "generated-raster"
+  },
+  {
+    "id": "long-las",
+    "source": "generated-raster"
+  },
+  {
+    "id": "hot-shot-laspistol",
+    "source": "generated-raster"
+  },
+  {
+    "id": "hot-shot-lasgun",
+    "source": "generated-raster"
+  },
+  {
+    "id": "lascannon",
+    "source": "generated-raster"
+  },
+  {
+    "id": "grenade-launcher",
+    "source": "generated-raster"
+  },
+  {
+    "id": "missile-launcher",
+    "source": "generated-raster"
+  },
+  {
+    "id": "inferno-pistol",
+    "source": "generated-raster"
+  },
+  {
+    "id": "meltagun",
+    "source": "generated-raster"
+  },
+  {
+    "id": "plasma-pistol",
+    "source": "generated-raster"
+  },
+  {
+    "id": "plasma-gun",
+    "source": "generated-raster"
+  },
+  {
+    "id": "autopistol",
+    "source": "generated-raster"
+  },
+  {
+    "id": "autogun",
+    "source": "generated-raster"
+  },
+  {
+    "id": "hand-cannon",
+    "source": "generated-raster"
+  },
+  {
+    "id": "heavy-stubber",
+    "source": "generated-raster"
+  },
+  {
+    "id": "combat-shotgun",
+    "source": "generated-raster"
+  },
+  {
+    "id": "pump-shotgun",
+    "source": "generated-raster"
+  },
+  {
+    "id": "sniper-rifle",
+    "source": "generated-raster"
+  },
+  {
+    "id": "stub-pistol",
+    "source": "generated-raster"
+  },
+  {
+    "id": "stub-revolver",
+    "source": "generated-raster"
+  },
+  {
+    "id": "needle-pistol",
+    "source": "generated-raster"
+  },
+  {
+    "id": "needle-rifle",
+    "source": "generated-raster"
+  },
+  {
+    "id": "web-pistol",
+    "source": "generated-raster"
+  },
+  {
+    "id": "webber",
+    "source": "generated-raster"
+  }
+]

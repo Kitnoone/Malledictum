@@ -2,16 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  CATALOG,
   CHARACTERISTICS,
   ORIGINS,
   ROLES,
   RULEBOOK,
   SERVICES,
   SKILL_ADVANCE_COSTS,
-  SKILLS,
-  TALENTS,
-  WEAPON_UPGRADES,
   characteristicAdvanceCost,
   type CatalogItem,
   type CatalogKind,
@@ -19,7 +15,7 @@ import {
   type Skill,
   type Talent,
 } from "./data/rules";
-import { SKILL_RULE_TEXT, type SkillRuleText } from "./data/skillRules";
+import { type SkillRuleText } from "./data/skillRules";
 import { TALENT_RULE_TEXT } from "./data/talentRules";
 import {
   getCatalogRule,
@@ -41,11 +37,15 @@ import {
   type WarpPeril,
 } from "./data/psychicRules";
 import { WeaponBlueprint } from "./components/WeaponBlueprint";
+import { BOOKS, CATALOG, TALENTS, SKILLS, SKILL_RULE_TEXT, WEAPON_UPGRADES } from './data/supplements';
+import { MECHANICUS_REFERENCE } from './data/mechanicusRules';
+import { Bestiary } from './components/Bestiary';
+import { SupplementSourceButton, SupplementSourceDialog } from './components/SupplementSources';
 
-type TabId = "sheet" | "advance" | "inventory" | "reference";
+type TabId = "sheet" | "advance" | "inventory" | "reference" | "bestiary";
 type SheetPageId = "dossier" | "combat";
 type AdvanceSectionId = "characteristics" | "skills" | "specializations" | "talents" | "journal";
-type ReferenceSectionId = "conditions" | "actions" | "environment" | "psychic" | "injuries";
+type ReferenceSectionId = "conditions" | "actions" | "environment" | "psychic" | "injuries" | "mechanicus";
 type PsychicReferenceMode = "rules" | "powers" | "phenomena" | "perils";
 type PurchaseKind = "talent" | "skill" | "specialization" | "characteristic";
 
@@ -96,6 +96,7 @@ type RuleDetail = {
   title: string;
   eyebrow: string;
   page: number;
+  source?: CatalogItem['source'];
   description?: string;
   facts?: Array<{ label: string; value: string }>;
   sections?: BookRuleSection[];
@@ -147,6 +148,7 @@ type AppState = {
   combatNotes: string;
   psychicPowerEntries: PsychicPowerEntry[];
   warpCharge: number;
+  motiveForceCharge: number;
   activeConditions: string[];
   activeInjuries: ActiveInjury[];
   weaponUpgrades: Record<string, string[]>;
@@ -159,6 +161,7 @@ const tabs: { id: TabId; label: string; mobileLabel: string; index: string }[] =
   { id: "advance", label: "Развитие", mobileLabel: "Развитие", index: "II" },
   { id: "inventory", label: "Инвентарь", mobileLabel: "Инвентарь", index: "III" },
   { id: "reference", label: "Ширма", mobileLabel: "Ширма", index: "IV" },
+  { id: "bestiary", label: "Bestiary", mobileLabel: "Бестиарий", index: "V" },
 ];
 
 const advanceSections: { id: AdvanceSectionId; label: string }[] = [
@@ -175,6 +178,7 @@ const referenceSections: { id: ReferenceSectionId; label: string }[] = [
   { id: "environment", label: "Окружение" },
   { id: "psychic", label: "Психосилы" },
   { id: "injuries", label: "Травмы" },
+  { id: "mechanicus", label: "Механикус" },
 ];
 
 const psychicReferenceModes: { id: PsychicReferenceMode; label: string }[] = [
@@ -240,6 +244,7 @@ const defaultState: AppState = {
   combatNotes: "",
   psychicPowerEntries: rows(10, emptyPsychicPowerEntry),
   warpCharge: 0,
+  motiveForceCharge: 0,
   activeConditions: [],
   activeInjuries: [],
   weaponUpgrades: {},
@@ -299,6 +304,11 @@ const kindLabels: Record<CatalogKind | "all", string> = {
   clothing: "Носимое",
   tool: "Инструменты",
   augmetic: "Аугметика",
+  "armor-upgrade": "Улучшения брони",
+  consumable: "Расходники",
+  companion: "Механические слуги",
+  pack: "Наборы",
+  vehicle: "Техника",
 };
 
 const isWeapon = (item: CatalogItem) => item.kind === "melee" || item.kind === "ranged";
@@ -307,6 +317,15 @@ function weaponUpgradeCompatibilityIssue(weapon: CatalogItem, upgrade: CatalogIt
   const traits = weapon.traits ?? "";
   const isRanged = weapon.kind === "ranged";
   const isMelee = weapon.kind === "melee";
+  if (upgrade.source) {
+    const name = upgrade.originalName ?? upgrade.name;
+    if (/Кристалл/i.test(name)) return isRanged && /Лазерное/.test(weapon.category) ? null : 'Только лазерное стрелковое оружие';
+    if (/Складной приклад|Фосфорный светоч/.test(name)) return isRanged && traits.includes('Двуручное') ? null : 'Нужно двуручное стрелковое оружие';
+    if (/Тактическая рукоять/.test(name)) return isRanged && traits.includes('Двуручное') && weapon.weightValue <= 2 ? null : 'Нужно двуручное стрелковое оружие с исходным весом до 2';
+    if (name === 'Phase Helix Rifling') return isRanged && /Стабберное/.test(weapon.category) ? null : 'Только стабберное стрелковое оружие';
+    if (name === 'Vent Shielding') return isRanged && /Лазерное|Плазменное|Мельта|Дуговое|Гальваническое|Фосфорное|Радиевое|Специальное/.test(weapon.category) ? null : 'Только энергетическое стрелковое оружие';
+    return isRanged ? null : 'Только стрелковое оружие';
+  }
   switch (upgrade.id) {
     case "exterminator":
       return (isRanged || isMelee) && traits.includes("Двуручное") ? null : "Нужно двуручное оружие";
@@ -358,7 +377,8 @@ function RichRuleText({ text }: { text: string }) {
   );
 }
 
-function SourceBadge({ page, title, text }: { page: number; title?: string; text?: string | string[] }) {
+function SourceBadge({ page, title, text, source }: { page: number; title?: string; text?: string | string[]; source?: CatalogItem['source'] }) {
+  if (source) return <SupplementSourceButton source={source} page={page} title={title} text={Array.isArray(text) ? text.join('\n\n') : text} />;
   const texts = typeof text === "string" ? [text] : text;
   return (
     <button
@@ -507,6 +527,7 @@ function RuleDetailDialog({
           <div><small>{detail.eyebrow}</small><h2 id="rule-detail-title">{detail.title}</h2></div>
           <SourceBadge
             page={detail.page}
+            source={detail.source}
             title={detail.title}
             text={[detail.description, ...(detail.sections?.filter((section) => section.page === detail.page).map((section) => section.text) ?? [])].filter((entry): entry is string => Boolean(entry))}
           />
@@ -514,23 +535,23 @@ function RuleDetailDialog({
         </header>
         <div className="skill-dialog-scroll">
           {canGoBack && <button className="rule-detail-back" type="button" onClick={onBack}>← Назад к предмету</button>}
-          <div className="dialog-inline-source"><SourceBadge page={detail.page} title={detail.title} text={[detail.description, ...(detail.sections?.filter((section) => section.page === detail.page).map((section) => section.text) ?? [])].filter((entry): entry is string => Boolean(entry))} /></div>
+          <div className="dialog-inline-source"><SourceBadge source={detail.source} page={detail.page} title={detail.title} text={[detail.description, ...(detail.sections?.filter((section) => section.page === detail.page).map((section) => section.text) ?? [])].filter((entry): entry is string => Boolean(entry))} /></div>
           {detail.facts && detail.facts.length > 0 && (
             <dl className="detail-facts">
               {detail.facts.map((fact) => <div key={`${fact.label}-${fact.value}`}><dt>{fact.label}</dt><dd>{fact.value || "—"}</dd></div>)}
             </dl>
           )}
-          {detail.description && <section className="book-rule-block"><span>Текст книги</span><RichRuleText text={detail.description} /></section>}
+          {detail.description && <section className="book-rule-block"><span>{detail.source ? 'Правила на русском' : 'Текст книги'}</span><RichRuleText text={detail.description} /></section>}
           {detail.sections?.map((section) => (
             <section className="book-rule-block compact-rule-block" key={`${section.label}-${section.page}`}>
-              <span>{section.label}<SourceBadge page={section.page} title={`${detail.title} · ${section.label}`} text={section.text} /></span>
+              <span>{section.label}<SourceBadge source={section.source} page={section.page} title={`${detail.title} · ${section.label}`} text={section.text} /></span>
               <RichRuleText text={section.text} />
             </section>
           ))}
           {detail.traitLinks && detail.traitLinks.length > 0 && (
             <section className="trait-link-block">
               <span>Свойства</span>
-              <div>{detail.traitLinks.map((trait) => <button type="button" key={trait} onClick={() => onOpenTrait(trait)}>{trait}<i aria-hidden="true">›</i></button>)}</div>
+              <div>{detail.traitLinks.map((trait) => <button type="button" key={trait} disabled={!resolveTraitRule(trait)} onClick={() => onOpenTrait(trait)}>{trait}{resolveTraitRule(trait) && <i aria-hidden="true">›</i>}</button>)}</div>
             </section>
           )}
         </div>
@@ -620,7 +641,7 @@ function SkillReferenceDialog({
 
           {selectedRules && selectedSpecializationDefinition && (
             <section className="book-rule-block specialization-rule-block">
-              <span>{skill.name} ({selectedSpecializationDefinition.name})</span>
+              <span>{skill.name} ({selectedSpecializationDefinition.name}){selectedRules.source && <SourceBadge source={selectedRules.source} page={selectedRules.page ?? 65} />}</span>
               <RichRuleText text={selectedRules.description} />
               {selectedRules.opposedBy && (
                 <div className="opposed-check">
@@ -679,7 +700,7 @@ function WeaponScreen({
       <header className="weapon-screen-header">
         <button type="button" onClick={onClose} aria-label="Вернуться к листу">←</button>
         <div><small>{item.category}</small><h2>{item.name}</h2></div>
-        <SourceBadge page={item.page} title={item.name} text={itemRule?.text} />
+        <SourceBadge source={item.source} page={item.page} title={item.name} text={itemRule?.text} />
       </header>
 
       <div className="weapon-screen-scroll">
@@ -701,7 +722,7 @@ function WeaponScreen({
             {traits.length > 0 && (
               <section className="weapon-traits-panel">
                 <span>Свойства</span>
-                <div>{traits.map((trait) => <button type="button" key={trait} onClick={() => onOpenTrait(trait)}>{trait}<i>›</i></button>)}</div>
+                <div>{traits.map((trait) => <button type="button" key={trait} disabled={!resolveTraitRule(trait)} onClick={() => onOpenTrait(trait)}>{trait}{resolveTraitRule(trait) && <i>›</i>}</button>)}</div>
               </section>
             )}
 
@@ -718,7 +739,7 @@ function WeaponScreen({
 
             {itemRule && (
               <section className="book-rule-block weapon-book-rule">
-                <span>{itemRule.label}<SourceBadge page={itemRule.page} title={item.name} text={itemRule.text} /></span>
+                <span>{itemRule.label}<SourceBadge source={itemRule.source} page={itemRule.page} title={item.name} text={itemRule.text} /></span>
                 <RichRuleText text={itemRule.text} />
               </section>
             )}
@@ -828,6 +849,8 @@ export default function Home() {
   const [specializationQuery, setSpecializationQuery] = useState("");
   const [catalogQuery, setCatalogQuery] = useState("");
   const [catalogKind, setCatalogKind] = useState<CatalogKind | "all">("all");
+  const [catalogSource, setCatalogSource] = useState('all');
+  const [talentSource, setTalentSource] = useState('all');
   const [creationMode, setCreationMode] = useState(false);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [selectedWeaponId, setSelectedWeaponId] = useState<string | null>(null);
@@ -922,7 +945,8 @@ export default function Home() {
   const inventoryWeapons = useMemo(() => inventoryWithItems.filter((entry) => ["melee", "ranged", "explosive"].includes(entry.item.kind)), [inventoryWithItems]);
   const inventoryArmor = useMemo(() => inventoryWithItems.filter((entry) => entry.item.kind === "armor"), [inventoryWithItems]);
   const inventoryEquipment = useMemo(() => inventoryWithItems.filter((entry) => !["melee", "ranged", "explosive", "armor"].includes(entry.item.kind)), [inventoryWithItems]);
-  const carriedWeight = inventoryWithItems.reduce((sum, entry) => sum + (entry.item.weightValue * entry.quantity), 0);
+  const carriedWeight = inventoryWithItems.reduce((sum, entry) => sum + (["vehicle", "companion"].includes(entry.item.kind) ? 0 : entry.item.weightValue * entry.quantity), 0);
+  const unknownWeightCount = inventoryWithItems.filter(entry => entry.item.weight === 'Не указан' && !['vehicle', 'companion'].includes(entry.item.kind)).length;
   const ownedTalents = state.talents.map((id) => TALENTS.find((talent) => talent.id === id)).filter((talent): talent is Talent => Boolean(talent));
   const activeInjuryEntries = state.activeInjuries.map((entry) => ({ ...entry, injury: CRITICAL_INJURIES.find((injuryEntry) => injuryEntry.id === entry.injuryId) }))
     .filter((entry): entry is ActiveInjury & { injury: CriticalInjury } => Boolean(entry.injury));
@@ -947,8 +971,8 @@ export default function Home() {
 
   const filteredTalents = useMemo(() => {
     const query = talentQuery.trim().toLocaleLowerCase("ru");
-    return TALENTS.filter((talent) => !query || `${talent.name} ${talent.requirements} ${talent.choice ?? ""}`.toLocaleLowerCase("ru").includes(query));
-  }, [talentQuery]);
+    return TALENTS.filter((talent) => (talentSource === 'all' || (talent.source ?? 'core') === talentSource) && (!query || `${talent.name} ${talent.requirements} ${talent.choice ?? ""}`.toLocaleLowerCase("ru").includes(query)));
+  }, [talentQuery, talentSource]);
 
   const allSpecializations = useMemo(() => SKILLS.flatMap((skill) => skill.specializations.map((specialization) => ({ ...specialization, key: `${skill.id}:${specialization.id}`, skill }))), []);
   const filteredSpecializations = useMemo(() => {
@@ -963,10 +987,10 @@ export default function Home() {
     const query = catalogQuery.trim().toLocaleLowerCase("ru");
     return CATALOG.filter((item) => {
       const matchesKind = catalogKind === "all" || item.kind === catalogKind;
-      const haystack = `${item.name} ${item.category} ${item.traits ?? ""} ${Object.values(item.stats).join(" ")}`.toLocaleLowerCase("ru");
-      return matchesKind && (!query || haystack.includes(query));
+      const haystack = `${item.name} ${item.originalName ?? ''} ${item.category} ${item.traits ?? ""} ${Object.values(item.stats).join(" ")}`.toLocaleLowerCase("ru");
+      return matchesKind && (catalogSource === 'all' || (item.source ?? 'core') === catalogSource) && (!query || haystack.includes(query));
     });
-  }, [catalogKind, catalogQuery]);
+  }, [catalogKind, catalogQuery, catalogSource]);
 
   const filteredPsychicPowers = useMemo(() => {
     const query = psychicQuery.trim().toLocaleLowerCase("ru");
@@ -1128,7 +1152,8 @@ export default function Home() {
     title: talentEntry.name,
     eyebrow: "Талант",
     page: talentEntry.page,
-    description: TALENT_RULE_TEXT[talentEntry.id],
+    source: talentEntry.source,
+    description: talentEntry.description ?? TALENT_RULE_TEXT[talentEntry.id],
     facts: [
       { label: "Стоимость", value: `${talentEntry.xpCost} ОО` },
       { label: "Требования", value: talentEntry.requirements },
@@ -1142,6 +1167,7 @@ export default function Home() {
       title: item.name,
       eyebrow: item.category,
       page: item.page,
+      source: item.source,
       facts: [
         ...Object.entries(item.stats).map(([label, value]) => ({ label, value })),
         { label: "Вес", value: item.weight },
@@ -1168,6 +1194,7 @@ export default function Home() {
       title: trait.title,
       eyebrow: "Свойство",
       page: trait.page,
+      source: trait.source,
       facts: trait.facts,
       sections: trait.sections,
     });
@@ -1180,7 +1207,8 @@ export default function Home() {
     showRuleDetail({
       title: `${entry.skill.name} (${entry.name})`,
       eyebrow: "Специализация",
-      page: entry.skill.page,
+      page: text?.page ?? entry.skill.page,
+      source: text?.source,
       description: text?.description,
       facts: text?.opposedBy ? [{ label: "Встречная проверка", value: text.opposedBy }] : undefined,
     });
@@ -1616,13 +1644,15 @@ export default function Home() {
                 </article>
 
                 <article className={advanceSection === "talents" ? "ruled-panel directory-panel" : "ruled-panel directory-panel section-hidden"}>
-                  <div className="directory-heading"><div><h3>Таланты</h3></div><input type="search" value={talentQuery} onChange={(event) => setTalentQuery(event.target.value)} placeholder="Поиск…" /></div>
+                  <div className="directory-heading"><div><h3>Таланты</h3></div><input type="search" aria-label="Поиск талантов" value={talentQuery} onChange={(event) => setTalentQuery(event.target.value)} placeholder="Поиск…" /></div><label className="catalog-source-filter">Книга<select value={talentSource} onChange={event => setTalentSource(event.target.value)}><option value="all">Все книги</option><option value="core">Основная книга</option><option value="mechanicus">Адептус Механикус</option></select></label>
                   <div className="directory-list talent-directory">{filteredTalents.map((talentEntry) => { const blocker = talentBlocker(talentEntry); const count = state.talents.filter((id) => id === talentEntry.id).length; return <div className="directory-row talent-catalog-row" key={talentEntry.id}><button className="directory-row-copy" type="button" onClick={() => openTalentDetail(talentEntry)}><span>{talentEntry.choice || "Талант"}</span><strong>{talentEntry.name}{count > 0 ? ` ×${count}` : ""}</strong><i>›</i></button><b>{creationMode ? "0 ОО" : `${talentEntry.xpCost} ОО`}</b><button type="button" disabled={Boolean(blocker)} title={blocker ?? undefined} onClick={() => buyTalent(talentEntry)}>{blocker ?? (creationMode ? "Добавить" : "Купить")}</button></div>; })}</div>
                 </article>
 
                 <article className={advanceSection === "journal" ? "experience-log" : "experience-log section-hidden"}><div className="log-title"><span>Журнал развития</span><button type="button" disabled={state.purchases.length === 0} onClick={undoLastPurchase}>Отменить последнюю</button></div>{state.purchases.length === 0 ? <p className="empty-note">Записей пока нет.</p> : [...state.purchases].reverse().slice(0, 12).map((purchase) => <div key={purchase.id}><p>{purchase.label}</p><strong>−{purchase.cost} ОО</strong></div>)}</article>
               </div>
             )}
+
+            {activeTab === "bestiary" && <Bestiary />}
 
             {activeTab === "inventory" && (
               <div className="chapter-page inventory-page rules-database-page">
@@ -1631,8 +1661,11 @@ export default function Home() {
 
                 <article className="ruled-panel manifest-panel"><div className="panel-heading"><div><h3>У персонажа</h3></div><button className="text-button" type="button" onClick={() => { setSheetPage("combat"); openTab("sheet"); }}>Открыть в листе</button></div>{inventoryWithItems.length === 0 ? <p className="empty-note">Инвентарь пуст.</p> : inventoryWithItems.map((entry) => <div className="manifest-row interactive" key={entry.itemId}><button className="manifest-item-button" type="button" onClick={() => openCatalogItem(entry.item)}><span><strong>{entry.item.name}</strong><small>{entry.item.category}</small></span><i>›</i></button><span>{entry.quantity}</span><button type="button" onClick={() => changeInventoryQuantity(entry.itemId, -1)}>−</button><button type="button" onClick={() => changeInventoryQuantity(entry.itemId, 1)}>+</button></div>)}</article>
 
-                <div className="catalog-toolbar"><input type="search" value={catalogQuery} onChange={(event) => setCatalogQuery(event.target.value)} placeholder="Поиск по названию, свойству или специализации…" /><div className="filter-chips">{(Object.keys(kindLabels) as Array<CatalogKind | "all">).map((kind) => <button type="button" key={kind} className={catalogKind === kind ? "active" : ""} onClick={() => setCatalogKind(kind)}>{kindLabels[kind]}</button>)}</div></div>
-                <div className="item-catalog-list">{filteredCatalog.map((item) => <div className="catalog-list-row" key={item.id}><button className="catalog-list-copy" type="button" onClick={() => openCatalogItem(item)}><span><small>{item.category}</small><strong>{item.name}</strong></span><i>›</i></button><button className="catalog-add-button" type="button" onClick={() => addInventoryItem(item.id)} aria-label={`Добавить ${item.name}`}>+</button></div>)}</div>
+                {unknownWeightCount > 0 && <p className="inventory-weight-note">Вес неполный: для {unknownWeightCount} записей в книге он не указан. Наборы не разворачиваются в отдельные предметы. Техника и самостоятельные слуги не входят в переносимый вес.</p>}
+                <div className="catalog-toolbar"><label className="catalog-source-filter">Книга<select value={catalogSource} onChange={event => setCatalogSource(event.target.value)}><option value="all">Все книги</option><option value="core">Основная книга</option><option value="requisition">Арсеналы Махария</option><option value="mechanicus">Адептус Механикус</option></select></label><input type="search" aria-label="Поиск предметов" value={catalogQuery} onChange={(event) => setCatalogQuery(event.target.value)} placeholder="Поиск по названию, свойству или специализации…" /><div className="filter-chips">{(Object.keys(kindLabels) as Array<CatalogKind | "all">).map((kind) => <button type="button" key={kind} className={catalogKind === kind ? "active" : ""} onClick={() => setCatalogKind(kind)}>{kindLabels[kind]}</button>)}</div></div>
+                <p className="catalog-result-count" role="status">Найдено: {filteredCatalog.length} / {CATALOG.length}</p>
+                {filteredCatalog.length === 0 && <p className="empty-note">Предметы не найдены. Измените поиск или фильтры.</p>}
+                <div className="item-catalog-list">{filteredCatalog.map((item) => <div className="catalog-list-row" key={item.id}><button className="catalog-list-copy" type="button" onClick={() => openCatalogItem(item)}><span><small>{item.source ? BOOKS[item.source].short : 'Основная книга'} · {item.category}</small><strong>{item.name}</strong></span><i>›</i></button><button className="catalog-add-button" type="button" onClick={() => addInventoryItem(item.id)} aria-label={`Добавить ${item.name}`}>+</button></div>)}</div>
               </div>
             )}
 
@@ -1642,6 +1675,8 @@ export default function Home() {
                 <nav className="reference-section-tabs" aria-label="Разделы ширмы">
                   {referenceSections.map((section) => <button type="button" key={section.id} className={referenceSection === section.id ? "active" : ""} onClick={() => setReferenceSection(section.id)}>{section.label}</button>)}
                 </nav>
+
+                {referenceSection === 'mechanicus' && <section className="mechanicus-reference"><header className="panel-heading"><div><h3>Адептус Механикус</h3><p>Арсенал — в инвентаре; новые таланты и специализации — в развитии; техника и фамильяры — в Bestiary.</p></div></header><div className="bestiary-wound-tracker"><strong>Движущая сила: {state.motiveForceCharge ?? 0} / {bonus('toughness')}</strong><button type="button" onClick={() => setTextState('motiveForceCharge', Math.max(0, (state.motiveForceCharge ?? 0) - 1))}>−1 заряд</button><button type="button" onClick={() => setTextState('motiveForceCharge', Math.min(bonus('toughness'), (state.motiveForceCharge ?? 0) + 1))}>+1 заряд</button><button type="button" onClick={() => setTextState('motiveForceCharge', 0)}>Сбросить</button><small>Для электрожрецов. Заряды сохраняются в профиле. Предел равен бонусу Выносливости.</small></div>{MECHANICUS_REFERENCE.map(rule => <article className="book-rule-block" key={rule.name}><h3>{rule.name}</h3><SourceBadge source="mechanicus" page={rule.page} title={rule.name} text={rule.text} /><RichRuleText text={rule.text} /></article>)}</section>}
 
                 {referenceSection === "conditions" && (
                   <article className="ruled-panel condition-reference"><div className="panel-heading"><div><h3>Состояния</h3></div></div><div className="condition-reference-list">{[...conditionReference].sort((a, b) => Number(state.activeConditions.includes(b[0])) - Number(state.activeConditions.includes(a[0]))).map(([name, effect, page]) => { const active = state.activeConditions.includes(name); return <div className={active ? "condition-list-row active" : "condition-list-row"} key={name}><button type="button" className="condition-copy" onClick={() => showRuleDetail({ title: String(name), eyebrow: "Состояние", page: Number(page), description: String(effect) })}><span><strong>{name}</strong>{active && <small>Активно</small>}</span><i>›</i></button><button type="button" className="condition-toggle" aria-pressed={active} onClick={() => toggleCondition(String(name))}>{active ? "✓" : "+"}</button></div>; })}</div></article>
@@ -1777,6 +1812,7 @@ export default function Home() {
         />
       )}
       {bookPageTarget && <BookPageDialog key={`${bookPageTarget.page}-${bookPageTarget.title ?? "page"}`} target={bookPageTarget} onClose={() => setBookPageTarget(null)} />}
+      <SupplementSourceDialog />
     </main>
   );
 }

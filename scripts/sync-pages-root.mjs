@@ -1,5 +1,5 @@
 import { cpSync, existsSync, rmSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, relative, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptsDirectory = dirname(fileURLToPath(import.meta.url));
@@ -21,6 +21,10 @@ cpSync(join(buildDirectory, "index.source.html"), join(buildDirectory, "index.ht
 for (const entry of publishedEntries) {
   const source = join(buildDirectory, entry);
   const destination = join(projectRoot, entry);
+  const relativeTarget = relative(projectRoot, destination);
+  if (!relativeTarget || relativeTarget.startsWith('..') || isAbsolute(relativeTarget)) {
+    throw new Error(`Refusing to replace a path outside the project: ${destination}`);
+  }
 
   if (!existsSync(source)) continue;
   rmSync(destination, { force: true, recursive: true });

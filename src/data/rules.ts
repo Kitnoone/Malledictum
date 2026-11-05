@@ -278,6 +278,8 @@ export type Talent = {
   repeatable?: boolean;
   creationOnly?: boolean;
   choice?: string;
+  source?: "mechanicus";
+  description?: string;
 };
 
 const talent = (
@@ -415,7 +417,12 @@ export type CatalogKind =
   | "armor"
   | "clothing"
   | "tool"
-  | "augmetic";
+  | "augmetic"
+  | "armor-upgrade"
+  | "consumable"
+  | "companion"
+  | "pack"
+  | "vehicle";
 
 export type CatalogItem = {
   id: string;
@@ -429,6 +436,10 @@ export type CatalogItem = {
   weightValue: number;
   stats: Record<string, string>;
   traits?: string;
+  source?: "adversary" | "requisition" | "mechanicus";
+  description?: string;
+  originalName?: string;
+  tablePage?: number;
 };
 
 const catalog = (

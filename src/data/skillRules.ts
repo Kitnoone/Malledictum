@@ -2,6 +2,8 @@ export type SpecializationRuleText = {
   description: string;
   opposedBy?: string;
   opposedPage?: number;
+  page?: number;
+  source?: "mechanicus";
 };
 
 export type SkillRuleText = {
